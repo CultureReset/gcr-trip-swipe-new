@@ -1571,6 +1571,141 @@
           <button type="submit" class="btn-primary">Save Backend Settings</button>
         </form>
       </div>
+
+      <!-- OpenAI -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          🤖 OpenAI API
+          <span class="api-status disconnected" id="openai-status">Not Connected</span>
+        </h2>
+        <p class="section-description">Enable AI-powered dashboard assistant with GPT-4</p>
+
+        <form id="openaiForm" onsubmit="saveOpenAISettings(event)">
+          <div class="form-group">
+            <label class="form-label">OpenAI API Key</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="openaiApiKey"
+                placeholder="sk-..."
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('openaiApiKey')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI API Keys</a></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <select class="form-input" id="openaiModel">
+              <option value="gpt-4">GPT-4 (Recommended)</option>
+              <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster, Cheaper)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary">Save OpenAI Settings</button>
+          <button type="button" class="btn-secondary" onclick="testOpenAIConnection()">Test Connection</button>
+        </form>
+      </div>
+
+      <!-- Google Analytics -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          📊 Google Analytics (GA4)
+          <span class="api-status disconnected">Not Connected</span>
+        </h2>
+        <p class="section-description">Track website analytics and user behavior</p>
+
+        <form id="googleAnalyticsForm" onsubmit="saveGA4Settings(event)">
+          <div class="form-group">
+            <label class="form-label">GA4 Measurement ID</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="ga4MeasurementId"
+                placeholder="G-XXXXXXXXXX"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('ga4MeasurementId')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://analytics.google.com/" target="_blank">Google Analytics</a> → Admin → Data Streams</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">GA4 API Secret (Optional)</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="ga4ApiSecret"
+                placeholder="API Secret for server-side events"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('ga4ApiSecret')">👁️</span>
+            </div>
+            <div class="form-help">For server-side tracking (optional)</div>
+          </div>
+
+          <button type="submit" class="btn-primary">Save GA4 Settings</button>
+          <button type="button" class="btn-secondary" onclick="testGA4Connection()">Test Connection</button>
+        </form>
+      </div>
+
+      <!-- Facebook / Meta -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          📱 Facebook / Meta Pixel
+          <span class="api-status disconnected">Not Connected</span>
+        </h2>
+        <p class="section-description">Track conversions and user behavior for Facebook Ads</p>
+
+        <form id="facebookPixelForm" onsubmit="saveFacebookSettings(event)">
+          <div class="form-group">
+            <label class="form-label">Facebook Pixel ID</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="facebookPixelId"
+                placeholder="1234567890123456"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('facebookPixelId')">👁️</span>
+            </div>
+            <div class="form-help">Get this from <a href="https://business.facebook.com/events_manager" target="_blank">Facebook Events Manager</a></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Facebook Ads API Access Token (Optional)</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="form-input"
+                id="facebookAdsToken"
+                placeholder="EAAxxxxxxxxxx..."
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('facebookAdsToken')">👁️</span>
+            </div>
+            <div class="form-help">For advanced Facebook Ads integration (optional)</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Facebook Ad Account ID (Optional)</label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="form-input"
+                id="facebookAdAccountId"
+                placeholder="act_1234567890"
+                value="">
+              <span class="toggle-password" onclick="toggleVisibility('facebookAdAccountId')">👁️</span>
+            </div>
+            <div class="form-help">For ad performance tracking (optional)</div>
+          </div>
+
+          <button type="submit" class="btn-primary">Save Facebook Settings</button>
+          <button type="button" class="btn-secondary" onclick="testFacebookConnection()">Test Pixel</button>
+        </form>
+      </div>
     </div>
 
     <!-- AR Hunts Tab -->
@@ -1993,6 +2128,134 @@
       console.log('Email Test: Would send test email via configured provider');
     }
 
+    // Save OpenAI Settings
+    function saveOpenAISettings(event) {
+      event.preventDefault();
+
+      const apiKey = document.getElementById('openaiApiKey').value;
+      const model = document.getElementById('openaiModel').value;
+
+      if (!apiKey) {
+        showError('Please enter an OpenAI API key');
+        return;
+      }
+
+      // Save to localStorage
+      localStorage.setItem('openai_api_key', apiKey);
+      localStorage.setItem('openai_model', model);
+
+      // Initialize AI assistant
+      if (window.dashboardAI) {
+        dashboardAI.init(apiKey);
+        document.getElementById('openai-status').textContent = 'Connected';
+        document.getElementById('openai-status').classList.remove('disconnected');
+        document.getElementById('openai-status').classList.add('connected');
+      }
+
+      showSuccess('OpenAI settings saved successfully! AI Assistant is now active.');
+    }
+
+    // Test OpenAI Connection
+    async function testOpenAIConnection() {
+      const apiKey = document.getElementById('openaiApiKey').value;
+
+      if (!apiKey) {
+        showError('Please enter an OpenAI API key first');
+        return;
+      }
+
+      showSuccess('Testing OpenAI connection...');
+
+      try {
+        const response = await fetch('https://api.openai.com/v1/models', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`
+          }
+        });
+
+        if (response.ok) {
+          showSuccess('✅ OpenAI connection successful! GPT-4 is available.');
+          document.getElementById('openai-status').textContent = 'Connected';
+          document.getElementById('openai-status').classList.remove('disconnected');
+          document.getElementById('openai-status').classList.add('connected');
+        } else {
+          const error = await response.json();
+          showError(`❌ OpenAI connection failed: ${error.error?.message || 'Unknown error'}`);
+        }
+      } catch (error) {
+        showError(`❌ Connection error: ${error.message}`);
+      }
+    }
+
+    // Save GA4 Settings
+    function saveGA4Settings(event) {
+      event.preventDefault();
+
+      const measurementId = document.getElementById('ga4MeasurementId').value;
+      const apiSecret = document.getElementById('ga4ApiSecret').value;
+
+      if (!measurementId) {
+        showError('Please enter a GA4 Measurement ID');
+        return;
+      }
+
+      // Save to localStorage
+      localStorage.setItem('ga4_measurement_id', measurementId);
+      if (apiSecret) {
+        localStorage.setItem('ga4_api_secret', apiSecret);
+      }
+
+      showSuccess('Google Analytics settings saved successfully!');
+    }
+
+    // Test GA4 Connection
+    function testGA4Connection() {
+      const measurementId = document.getElementById('ga4MeasurementId').value;
+      if (!measurementId) {
+        showError('Please enter a GA4 Measurement ID first');
+        return;
+      }
+      showSuccess('Testing GA4 connection... Check browser console for details');
+      console.log('GA4 Test: Would verify Measurement ID:', measurementId);
+    }
+
+    // Save Facebook Settings
+    function saveFacebookSettings(event) {
+      event.preventDefault();
+
+      const pixelId = document.getElementById('facebookPixelId').value;
+      const adsToken = document.getElementById('facebookAdsToken').value;
+      const adAccountId = document.getElementById('facebookAdAccountId').value;
+
+      if (!pixelId) {
+        showError('Please enter a Facebook Pixel ID');
+        return;
+      }
+
+      // Save to localStorage
+      localStorage.setItem('facebook_pixel_id', pixelId);
+      if (adsToken) {
+        localStorage.setItem('facebook_ads_token', adsToken);
+      }
+      if (adAccountId) {
+        localStorage.setItem('facebook_ad_account_id', adAccountId);
+      }
+
+      showSuccess('Facebook settings saved successfully!');
+    }
+
+    // Test Facebook Connection
+    function testFacebookConnection() {
+      const pixelId = document.getElementById('facebookPixelId').value;
+      if (!pixelId) {
+        showError('Please enter a Facebook Pixel ID first');
+        return;
+      }
+      showSuccess('Testing Facebook Pixel... Check browser console for details');
+      console.log('Facebook Test: Would verify Pixel ID:', pixelId);
+    }
+
     // Load saved settings on page load
     window.addEventListener('DOMContentLoaded', function() {
       // Load OAuth settings
@@ -2035,6 +2298,41 @@
       const apiBaseUrl = localStorage.getItem('apiBaseUrl');
       if (apiBaseUrl) {
         document.getElementById('apiBaseUrl').value = apiBaseUrl;
+      }
+
+      // Load OpenAI settings
+      const openaiKey = localStorage.getItem('openai_api_key');
+      const openaiModel = localStorage.getItem('openai_model') || 'gpt-4';
+      if (openaiKey) {
+        document.getElementById('openaiApiKey').value = openaiKey;
+        document.getElementById('openaiModel').value = openaiModel;
+        document.getElementById('openai-status').textContent = 'Connected';
+        document.getElementById('openai-status').classList.remove('disconnected');
+        document.getElementById('openai-status').classList.add('connected');
+      }
+
+      // Load GA4 settings
+      const ga4MeasurementId = localStorage.getItem('ga4_measurement_id');
+      const ga4ApiSecret = localStorage.getItem('ga4_api_secret');
+      if (ga4MeasurementId) {
+        document.getElementById('ga4MeasurementId').value = ga4MeasurementId;
+      }
+      if (ga4ApiSecret) {
+        document.getElementById('ga4ApiSecret').value = ga4ApiSecret;
+      }
+
+      // Load Facebook settings
+      const fbPixelId = localStorage.getItem('facebook_pixel_id');
+      const fbAdsToken = localStorage.getItem('facebook_ads_token');
+      const fbAdAccountId = localStorage.getItem('facebook_ad_account_id');
+      if (fbPixelId) {
+        document.getElementById('facebookPixelId').value = fbPixelId;
+      }
+      if (fbAdsToken) {
+        document.getElementById('facebookAdsToken').value = fbAdsToken;
+      }
+      if (fbAdAccountId) {
+        document.getElementById('facebookAdAccountId').value = fbAdAccountId;
       }
 
       // Load Platform settings
@@ -4506,5 +4804,106 @@ ${capture.rewardCode ? `Reward Code: ${capture.rewardCode}` : ''}
 
   <!-- AR Hunt Scripts -->
   <script src="js/ar-hunt-manager.js"></script>
+
+  <!-- AI Assistant Widget -->
+  <div id="ai-assistant" style="display: none;">
+    <div class="ai-assistant-header">
+      <div class="ai-assistant-title">
+        <span class="ai-icon">🤖</span>
+        <span>AI Assistant</span>
+      </div>
+      <div class="ai-assistant-controls">
+        <button class="ai-control-btn" onclick="dashboardAI.clearChat()" title="Clear Chat">🗑️</button>
+        <button class="ai-control-btn" onclick="dashboardAI.hideAssistant()" title="Minimize">_</button>
+      </div>
+    </div>
+
+    <div class="ai-chat-container" id="ai-chat-messages">
+      <!-- Messages will be added here dynamically -->
+    </div>
+
+    <div class="ai-input-container">
+      <div class="ai-input-wrapper">
+        <textarea id="ai-input" placeholder="Ask me anything about your dashboard..." rows="1" onkeypress="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();dashboardAI.handleTextInput();}"></textarea>
+      </div>
+      <button id="ai-mic-btn" class="ai-input-btn" onclick="dashboardAI.toggleVoiceInput()" title="Voice Input">🎤</button>
+      <button id="ai-send-btn" class="ai-input-btn" onclick="dashboardAI.handleTextInput()" title="Send">➤</button>
+    </div>
+  </div>
+
+  <!-- AI Toggle Button (when minimized) -->
+  <button id="ai-toggle-btn" onclick="dashboardAI.toggleAssistant()" title="Open AI Assistant">
+    🤖
+  </button>
+
+  <!-- AI Assistant Styles & Scripts -->
+  <link rel="stylesheet" href="css/dashboard-ai-assistant.css">
+  <script src="js/dashboard-ai-assistant.js"></script>
+
+  <!-- Initialize AI Assistant -->
+  <script>
+    // Initialize AI assistant when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if OpenAI API key is configured
+      const openaiKey = localStorage.getItem('openai_api_key');
+
+      if (openaiKey) {
+        dashboardAI.init(openaiKey);
+        dashboardAI.clearChat(); // Show welcome message
+      }
+
+      // Show toggle button
+      const toggleBtn = document.getElementById('ai-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.classList.remove('hidden');
+      }
+
+      // Track tab changes for context
+      const originalSwitchTab = window.switchTab;
+      window.switchTab = function(tabName) {
+        originalSwitchTab(tabName);
+        dashboardAI.updateContext({ tab: tabName });
+      };
+    });
+
+    // Enhanced CSV import with AI validation
+    const originalStartImport = window.startImport;
+    window.startImport = async function() {
+      const fileInput = document.getElementById('csvFileInput');
+      const file = fileInput.files[0];
+      const mode = document.querySelector('input[name="importMode"]:checked').value;
+
+      if (!file) {
+        alert('Please select a CSV file');
+        return;
+      }
+
+      // Ask AI to validate before importing
+      if (window.dashboardAI && window.dashboardAI.apiKey) {
+        const sections = [];
+        if (mode === 'update') {
+          document.querySelectorAll('input[name="updateSection"]:checked').forEach(cb => {
+            sections.push(cb.value);
+          });
+        }
+
+        // Show AI and ask for validation
+        await dashboardAI.validateCSV(file, mode, sections);
+      }
+
+      // Proceed with import
+      await originalStartImport();
+    };
+
+    // Track errors for AI help
+    window.addEventListener('error', function(event) {
+      if (window.dashboardAI) {
+        dashboardAI.updateContext({
+          lastError: event.message,
+          lastAction: 'Error occurred'
+        });
+      }
+    });
+  </script>
 </body>
 </html>

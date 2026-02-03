@@ -1007,6 +1007,7 @@
           </select>
 
           <button class="btn-primary" onclick="refreshGCRBusinesses()">🔄 Refresh</button>
+          <button class="btn-primary" onclick="openCSVImportModal()">📤 Import CSV</button>
         </div>
 
         <!-- Business Count -->
@@ -1246,6 +1247,98 @@
         <div style="display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
           <button onclick="saveAdvancedChanges()" class="btn-primary">💾 Save All Changes</button>
           <button onclick="closeAdvancedEditor()" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV Import Modal -->
+    <div id="csvImportModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; overflow-y: auto;">
+      <div style="max-width: 700px; margin: 60px auto; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <h2 style="font-size: 28px; font-weight: 700; color: #1e293b;">📤 Import Business Data</h2>
+          <button onclick="closeCSVImportModal()" style="background: none; border: none; font-size: 36px; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
+        </div>
+
+        <p style="color: #64748b; margin-bottom: 30px; font-size: 15px;">Import business data from CSV file with full control over how data is merged.</p>
+
+        <!-- File Upload -->
+        <div style="margin-bottom: 30px;">
+          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 12px; font-size: 15px;">Select CSV File</label>
+          <input type="file" id="csvFileInput" accept=".csv" style="width: 100%; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; cursor: pointer; transition: all 0.2s;" onchange="handleFileSelect()">
+          <div id="fileInfo" style="margin-top: 12px; font-size: 14px; color: #64748b;"></div>
+        </div>
+
+        <!-- Import Mode -->
+        <div style="margin-bottom: 30px;">
+          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 16px; font-size: 15px;">Import Mode</label>
+
+          <label style="display: block; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#667eea'" onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='#e2e8f0'">
+            <input type="radio" name="importMode" value="replace" checked onchange="updateImportMode()" style="margin-right: 12px; width: 18px; height: 18px;">
+            <strong style="color: #1e293b;">REPLACE ALL</strong>
+            <p style="margin: 8px 0 0 30px; font-size: 14px; color: #64748b;">Overwrites all existing data for the business (keeps images)</p>
+          </label>
+
+          <label style="display: block; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#667eea'" onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='#e2e8f0'">
+            <input type="radio" name="importMode" value="merge" onchange="updateImportMode()" style="margin-right: 12px; width: 18px; height: 18px;">
+            <strong style="color: #1e293b;">MERGE/ADD</strong>
+            <p style="margin: 8px 0 0 30px; font-size: 14px; color: #64748b;">Adds new items to existing data (detects duplicates automatically)</p>
+          </label>
+
+          <label style="display: block; padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#667eea'" onmouseout="if(!this.querySelector('input').checked) this.style.borderColor='#e2e8f0'">
+            <input type="radio" name="importMode" value="update" onchange="updateImportMode()" style="margin-right: 12px; width: 18px; height: 18px;">
+            <strong style="color: #1e293b;">UPDATE SPECIFIC SECTIONS</strong>
+            <p style="margin: 8px 0 0 30px; font-size: 14px; color: #64748b;">Replace only selected sections (choose below)</p>
+          </label>
+        </div>
+
+        <!-- Sections to Update (for UPDATE mode) -->
+        <div id="sectionsToUpdate" style="display: none; margin-bottom: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 2px solid #e2e8f0;">
+          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 16px; font-size: 15px;">Select Sections to Update:</label>
+
+          <label style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+            <input type="checkbox" value="menus" style="margin-right: 12px; width: 18px; height: 18px;">
+            <span style="color: #1e293b; font-weight: 500;">🍽️ Menus (Breakfast, Lunch, Dinner, etc.)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+            <input type="checkbox" value="specials" style="margin-right: 12px; width: 18px; height: 18px;">
+            <span style="color: #1e293b; font-weight: 500;">⭐ Specials (Sunset Menu, Taco Tuesday, etc.)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+            <input type="checkbox" value="events" style="margin-right: 12px; width: 18px; height: 18px;">
+            <span style="color: #1e293b; font-weight: 500;">🎉 Events (Live Jazz, Trivia, etc.)</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+            <input type="checkbox" value="happyHour" style="margin-right: 12px; width: 18px; height: 18px;">
+            <span style="color: #1e293b; font-weight: 500;">🍻 Happy Hour</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+            <input type="checkbox" value="hours" style="margin-right: 12px; width: 18px; height: 18px;">
+            <span style="color: #1e293b; font-weight: 500;">🕐 Hours & Service Windows</span>
+          </label>
+
+          <label style="display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; cursor: pointer;">
+            <input type="checkbox" value="policies" style="margin-right: 12px; width: 18px; height: 18px;">
+            <span style="color: #1e293b; font-weight: 500;">📋 Policies</span>
+          </label>
+        </div>
+
+        <!-- Import Progress -->
+        <div id="importProgress" style="display: none; margin-bottom: 20px; padding: 20px; background: #f0f9ff; border-radius: 12px; border: 2px solid #bfdbfe;">
+          <div style="font-weight: 600; color: #1e40af; margin-bottom: 12px;">⏳ Importing...</div>
+          <div id="importStatus" style="color: #3b82f6; font-size: 14px;"></div>
+        </div>
+
+        <!-- Import Result -->
+        <div id="importResult" style="display: none; margin-bottom: 20px;"></div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button onclick="closeCSVImportModal()" class="btn-secondary" style="padding: 14px 28px; font-size: 16px;">Cancel</button>
+          <button onclick="startImport()" id="importButton" class="btn-primary" disabled style="padding: 14px 28px; font-size: 16px;">📤 Import Data</button>
         </div>
       </div>
     </div>
@@ -4252,6 +4345,164 @@ ${capture.rewardCode ? `Reward Code: ${capture.rewardCode}` : ''}
       </form>
     </div>
   </div>
+
+  <!-- CSV Import Scripts -->
+  <script src="js/csv-import-system.js"></script>
+  <script src="js/csv-import-manager.js"></script>
+  <script>
+    // CSV Import Functions
+    let csvImportManager = null;
+    let selectedFile = null;
+
+    function openCSVImportModal() {
+      document.getElementById('csvImportModal').style.display = 'block';
+      if (!csvImportManager) {
+        csvImportManager = new CSVImportManager();
+      }
+    }
+
+    function closeCSVImportModal() {
+      document.getElementById('csvImportModal').style.display = 'none';
+      document.getElementById('csvFileInput').value = '';
+      document.getElementById('fileInfo').innerHTML = '';
+      document.getElementById('importProgress').style.display = 'none';
+      document.getElementById('importResult').style.display = 'none';
+      selectedFile = null;
+      document.getElementById('importButton').disabled = true;
+    }
+
+    function handleFileSelect() {
+      const input = document.getElementById('csvFileInput');
+      selectedFile = input.files[0];
+
+      if (selectedFile) {
+        const fileInfo = document.getElementById('fileInfo');
+        fileInfo.innerHTML = `✅ Selected: <strong>${selectedFile.name}</strong> (${(selectedFile.size / 1024).toFixed(2)} KB)`;
+        fileInfo.style.color = '#059669';
+        document.getElementById('importButton').disabled = false;
+      }
+    }
+
+    function updateImportMode() {
+      const mode = document.querySelector('input[name="importMode"]:checked').value;
+      const sectionsDiv = document.getElementById('sectionsToUpdate');
+
+      if (mode === 'update') {
+        sectionsDiv.style.display = 'block';
+      } else {
+        sectionsDiv.style.display = 'none';
+      }
+
+      // Update border colors
+      document.querySelectorAll('input[name="importMode"]').forEach(radio => {
+        const label = radio.parentElement;
+        if (radio.checked) {
+          label.style.borderColor = '#667eea';
+          label.style.backgroundColor = '#f0f4ff';
+        } else {
+          label.style.borderColor = '#e2e8f0';
+          label.style.backgroundColor = 'white';
+        }
+      });
+    }
+
+    async function startImport() {
+      if (!selectedFile) {
+        alert('Please select a CSV file first');
+        return;
+      }
+
+      const mode = document.querySelector('input[name="importMode"]:checked').value;
+      let sections = [];
+
+      if (mode === 'update') {
+        const checkboxes = document.querySelectorAll('#sectionsToUpdate input[type="checkbox"]:checked');
+        sections = Array.from(checkboxes).map(cb => cb.value);
+
+        if (sections.length === 0) {
+          alert('Please select at least one section to update');
+          return;
+        }
+      }
+
+      // Show progress
+      document.getElementById('importProgress').style.display = 'block';
+      document.getElementById('importStatus').textContent = 'Parsing CSV file...';
+      document.getElementById('importButton').disabled = true;
+      document.getElementById('importResult').style.display = 'none';
+
+      try {
+        // Import CSV
+        const result = await csvImportManager.importCSV(selectedFile, mode, sections);
+
+        // Hide progress
+        document.getElementById('importProgress').style.display = 'none';
+
+        if (result.success) {
+          // Show success
+          const resultDiv = document.getElementById('importResult');
+          resultDiv.style.display = 'block';
+          resultDiv.style.padding = '20px';
+          resultDiv.style.backgroundColor = '#ecfdf5';
+          resultDiv.style.border = '2px solid #10b981';
+          resultDiv.style.borderRadius = '12px';
+          resultDiv.innerHTML = `
+            <div style="font-weight: 700; color: #047857; font-size: 18px; margin-bottom: 12px;">✅ Import Successful!</div>
+            <div style="color: #065f46; font-size: 15px; line-height: 1.8;">
+              <div><strong>Mode:</strong> ${mode.toUpperCase()}</div>
+              <div><strong>Businesses Affected:</strong> ${result.businessesAffected.length}</div>
+              ${result.itemsAdded ? `<div><strong>Items Added:</strong> ${result.itemsAdded}</div>` : ''}
+              ${result.duplicatesSkipped ? `<div><strong>Duplicates Skipped:</strong> ${result.duplicatesSkipped}</div>` : ''}
+              ${result.warnings && result.warnings.length > 0 ? `<div style="margin-top: 12px; color: #b45309;"><strong>Warnings:</strong><br>${result.warnings.slice(0, 5).join('<br>')}</div>` : ''}
+            </div>
+          `;
+
+          // Refresh businesses table
+          setTimeout(() => {
+            if (typeof refreshGCRBusinesses === 'function') {
+              refreshGCRBusinesses();
+            }
+          }, 1000);
+
+        } else {
+          // Show error
+          const resultDiv = document.getElementById('importResult');
+          resultDiv.style.display = 'block';
+          resultDiv.style.padding = '20px';
+          resultDiv.style.backgroundColor = '#fef2f2';
+          resultDiv.style.border = '2px solid #ef4444';
+          resultDiv.style.borderRadius = '12px';
+          resultDiv.innerHTML = `
+            <div style="font-weight: 700; color: #dc2626; font-size: 18px; margin-bottom: 12px;">❌ Import Failed</div>
+            <div style="color: #991b1b; font-size: 15px; line-height: 1.8;">
+              <div><strong>Error:</strong> ${result.error || 'Unknown error'}</div>
+              ${result.errors && result.errors.length > 0 ? `<div style="margin-top: 12px;"><strong>Details:</strong><br>${result.errors.slice(0, 5).join('<br>')}</div>` : ''}
+            </div>
+          `;
+        }
+
+      } catch (error) {
+        // Hide progress
+        document.getElementById('importProgress').style.display = 'none';
+
+        // Show error
+        const resultDiv = document.getElementById('importResult');
+        resultDiv.style.display = 'block';
+        resultDiv.style.padding = '20px';
+        resultDiv.style.backgroundColor = '#fef2f2';
+        resultDiv.style.border = '2px solid #ef4444';
+        resultDiv.style.borderRadius = '12px';
+        resultDiv.innerHTML = `
+          <div style="font-weight: 700; color: #dc2626; font-size: 18px; margin-bottom: 12px;">❌ Import Failed</div>
+          <div style="color: #991b1b; font-size: 15px;">
+            <strong>Error:</strong> ${error.message || 'Unknown error occurred'}
+          </div>
+        `;
+      }
+
+      document.getElementById('importButton').disabled = false;
+    }
+  </script>
 
   <!-- AR Hunt Scripts -->
   <script src="js/ar-hunt-manager.js"></script>

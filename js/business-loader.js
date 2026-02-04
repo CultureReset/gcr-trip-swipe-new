@@ -1,5 +1,5 @@
 // GCR Business Loader
-// Loads businesses from Google Sheets via API
+// Loads businesses from Supabase API
 
 let allBusinesses = [];
 let isLoading = false;
@@ -13,10 +13,10 @@ async function loadBusinesses() {
   }
 
   isLoading = true;
-  console.log('Loading businesses from Google Sheets API...');
+  console.log('📡 Loading businesses from Supabase API...');
 
   try {
-    const response = await fetch('http://localhost:3002/api/businesses', {
+    const response = await fetch('http://localhost:3002/api/gcr/businesses', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

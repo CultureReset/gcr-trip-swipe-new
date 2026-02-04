@@ -5,9 +5,9 @@
  */
 
 const fs = require('fs');
-const https = require('https');
+const http = require('http');
 
-const API_URL = 'https://api.gulfcoastradar.com/api/businesses/bulk';
+const API_URL = 'http://localhost:3002/api/gcr/businesses/bulk';
 const CSV_FILE = './cobalt_master_all_data_with_events.csv';
 
 console.log('🚀 Starting Cobalt data upload to Supabase...\n');
@@ -88,28 +88,36 @@ function parseCSV(csvText) {
     }
 
     if (recordType === 'MENU_ITEM') {
-      const mealPeriod = values[20] || 'DINNER';
-      const sectionName = values[22];
+      let mealPeriod = values[20] || 'DINNER';
+      const sectionName = values[22] || '';
       const itemName = values[25];
       const itemDescription = values[26];
       const price = values[27];
 
-      if (!business.menus[mealPeriod.toLowerCase()]) {
-        business.menus[mealPeriod.toLowerCase()] = {
-          name: mealPeriod,
+      // Smart detection: if "happy hour" appears anywhere, put in happyhour category
+      const searchStr = `${mealPeriod} ${sectionName} ${itemName}`.toLowerCase();
+      if (searchStr.includes('happy hour') || searchStr.includes('happyhour') || searchStr.includes('hh')) {
+        mealPeriod = 'happyhour';
+      }
+
+      const mealKey = mealPeriod.toLowerCase().replace(/\s+/g, '_');
+
+      if (!business.menus[mealKey]) {
+        business.menus[mealKey] = {
+          name: mealPeriod === 'happyhour' ? 'Happy Hour' : mealPeriod,
           sections: {}
         };
       }
 
-      const sectionKey = sectionName.toLowerCase().replace(/\s+/g, '_');
-      if (!business.menus[mealPeriod.toLowerCase()].sections[sectionKey]) {
-        business.menus[mealPeriod.toLowerCase()].sections[sectionKey] = {
-          name: sectionName,
+      const sectionKey = (sectionName || 'main').toLowerCase().replace(/\s+/g, '_');
+      if (!business.menus[mealKey].sections[sectionKey]) {
+        business.menus[mealKey].sections[sectionKey] = {
+          name: sectionName || 'Main',
           items: []
         };
       }
 
-      business.menus[mealPeriod.toLowerCase()].sections[sectionKey].items.push({
+      business.menus[mealKey].sections[sectionKey].items.push({
         name: itemName,
         description: itemDescription,
         price: price
@@ -167,7 +175,7 @@ const options = {
   }
 };
 
-const req = https.request(API_URL, options, (res) => {
+const req = http.request(API_URL, options, (res) => {
   let data = '';
 
   res.on('data', (chunk) => {

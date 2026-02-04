@@ -55,9 +55,26 @@ function generateHappyHoursByDay() {
     const happyHourArray = Array.isArray(happyHourData) ? happyHourData : (happyHourData.items || []);
 
     // ALSO get menu items with category "Happy Hour" (detailed appetizers, drinks, etc.)
-    const menuHappyHourItems = (business.menu || []).filter(item =>
-      item.category && item.category.toLowerCase().includes('happy hour')
-    );
+    let menuHappyHourItems = [];
+
+    // Handle BOTH flat array menu AND nested object menu structure
+    if (Array.isArray(business.menu)) {
+      // OLD FORMAT: flat array
+      menuHappyHourItems = business.menu.filter(item =>
+        item.category && item.category.toLowerCase().includes('happy hour')
+      );
+    } else if (business.menu && typeof business.menu === 'object') {
+      // NEW FORMAT: nested object { happyhour: { sections: { ... } } }
+      if (business.menu.happyhour && business.menu.happyhour.sections) {
+        // Extract all items from happy hour sections
+        Object.values(business.menu.happyhour.sections).forEach(section => {
+          if (section.items && Array.isArray(section.items)) {
+            menuHappyHourItems.push(...section.items);
+          }
+        });
+      }
+    }
+
     const drinksHappyHourItems = (business.drinks || []).filter(item =>
       item.category && item.category.toLowerCase().includes('happy hour')
     );
@@ -223,7 +240,17 @@ function initializeHappyHourPage() {
 
   // Get ONLY businesses with happy hours
   allHappyHourBusinesses = allBusinesses.filter(b => {
-    return b.happyHourSpecials || b.happy_hour || b.happyHour || b.has_happy_hour || (b.happyHours && b.happyHours.length > 0);
+    // Check old formats
+    if (b.happyHourSpecials || b.happy_hour || b.happyHour || b.has_happy_hour || (b.happyHours && b.happyHours.length > 0)) {
+      return true;
+    }
+
+    // Check NEW nested menu format: menu.happyhour exists
+    if (b.menu && typeof b.menu === 'object' && b.menu.happyhour) {
+      return true;
+    }
+
+    return false;
   });
 
   // Generate happy hours by day

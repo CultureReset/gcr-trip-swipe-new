@@ -52,13 +52,17 @@ class CSVImportManager {
       localStorage.setItem('gcr_business_data', JSON.stringify(result.businesses));
       window.allBusinesses = result.businesses;
 
+      // Sync to Supabase backend
+      const syncResult = await this.syncToSupabase(result.businesses, mode);
+
       return {
         success: true,
         mode: mode,
         businessesAffected: result.affectedBusinessIds,
         itemsAdded: result.itemsAdded || 0,
         duplicatesSkipped: result.duplicatesSkipped || 0,
-        warnings: parsed.warnings || []
+        warnings: parsed.warnings || [],
+        supabaseSync: syncResult
       };
 
     } catch (error) {
@@ -325,6 +329,51 @@ class CSVImportManager {
     });
 
     return filtered;
+  }
+
+  /**
+   * Sync businesses to Supabase backend
+   * @param {Array} businesses - Businesses to sync
+   * @param {String} mode - Import mode
+   * @returns {Promise<Object>} Sync result
+   */
+  async syncToSupabase(businesses, mode) {
+    try {
+      console.log(`📤 Syncing ${businesses.length} businesses to Supabase...`);
+
+      const response = await fetch('http://localhost:3002/api/gcr/businesses/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          businesses: businesses,
+          mode: mode
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(`✅ Supabase sync successful: ${result.count} businesses saved`);
+
+      return {
+        success: true,
+        count: result.count,
+        message: result.message
+      };
+
+    } catch (error) {
+      console.error('❌ Supabase sync failed:', error);
+      return {
+        success: false,
+        error: error.message,
+        warning: 'Data saved to localStorage but not synced to Supabase. Changes may not persist on page reload.'
+      };
+    }
   }
 }
 

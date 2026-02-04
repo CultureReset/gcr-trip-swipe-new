@@ -17,7 +17,7 @@ class CSVImportSystem {
       POLICY: 'POLICY'
     };
 
-    this.menuTypes = ['breakfast', 'brunch', 'lunch', 'dinner', 'sunset', 'cocktails', 'wine', 'beer', 'desserts'];
+    this.menuTypes = ['breakfast', 'brunch', 'lunch', 'dinner', 'sunset', 'cocktails', 'wine', 'beer', 'desserts', 'happyhour', 'happy_hour'];
     this.errors = [];
     this.warnings = [];
   }
@@ -499,11 +499,17 @@ class CSVImportSystem {
    * Detect menu type from MenuID or MenuName
    */
   detectMenuType(menuId, menuName) {
-    const searchString = `${menuId} ${menuName}`.toLowerCase();
+    const searchString = `${menuId} ${menuName}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Check for happy hour variations first
+    if (searchString.includes('happyhour') || searchString.includes('hh')) {
+      return 'happyhour';
+    }
 
     for (const type of this.menuTypes) {
-      if (searchString.includes(type)) {
-        return type;
+      const cleanType = type.replace(/_/g, '');
+      if (searchString.includes(cleanType)) {
+        return type === 'happy_hour' ? 'happyhour' : type;
       }
     }
 

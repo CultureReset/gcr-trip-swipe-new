@@ -3395,15 +3395,9 @@
   <script src="js/adaptive-results-display.js"></script>
   <script src="js/reservation-manager.js"></script>
   <script src="js/calendar-export.js"></script>
-  <!-- GOOGLE SHEETS DATA LOADER (ONLY DATA SOURCE) -->
-  <!-- Load from local JSON data file -->
-  <script src="js/load-local-data.js"></script>
-  <script src="js/master-data-loader.js?v=2"></script>
-  <script>
-    loadMasterData().then(() => {
-      console.log('✅ Loaded', allBusinesses.length, 'businesses from Google Sheets');
-    });
-  </script>
+
+  <!-- Data Loader - localStorage + Supabase -->
+  <script src="js/data-loader.js"></script>
 
   <!-- Other Scripts -->
   <script src="js/calendar-data.js"></script>

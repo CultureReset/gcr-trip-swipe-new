@@ -3,6 +3,18 @@
 let allPosts = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Wait for businesses to load
+  if (typeof allBusinesses !== 'undefined' && allBusinesses.length > 0) {
+    initFeed();
+  }
+});
+
+// Listen for businesses loaded event
+window.addEventListener('allBusinessesUpdated', () => {
+  initFeed();
+});
+
+function initFeed() {
   // Get all posts and sort by timestamp (newest first)
   allPosts = getAllPosts();
 
@@ -13,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => {
     refreshFeed();
   }, 60000);
-});
+}
 
 function displayPosts(posts) {
   const container = document.getElementById('feed-posts-container');
@@ -76,6 +88,55 @@ function displayPosts(posts) {
 
   postsHtml += '</div>';
   container.innerHTML = postsHtml;
+}
+
+function getAllPosts() {
+  const posts = [];
+
+  // Collect feed posts from ALL businesses
+  if (typeof allBusinesses !== 'undefined' && allBusinesses) {
+    allBusinesses.forEach(business => {
+      if (business.feedPosts && Array.isArray(business.feedPosts)) {
+        business.feedPosts.forEach(post => {
+          posts.push({
+            ...post,
+            businessId: business.id,
+            businessName: business.name,
+            accountName: business.name,
+            profileImage: business.logo || business.photos?.[0] || 'gcr-logo.png',
+            verified: false
+          });
+        });
+      }
+    });
+  }
+
+  // Sort by timestamp (newest first)
+  posts.sort((a, b) => {
+    const dateA = new Date(a.timestamp);
+    const dateB = new Date(b.timestamp);
+    return dateB - dateA; // Descending order (newest first)
+  });
+
+  return posts;
+}
+
+function formatTimestamp(timestamp) {
+  if (!timestamp) return 'Just now';
+
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function refreshFeed() {

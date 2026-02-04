@@ -998,12 +998,29 @@
         return;
       }
 
-      // Get current business data
+      // Get current business data - flatten menu if nested
+      let menuItems = [];
+      if (Array.isArray(business.menu)) {
+        menuItems = business.menu;
+      } else if (business.menu && typeof business.menu === 'object') {
+        // Flatten nested menu structure for AI
+        Object.keys(business.menu).forEach(mealPeriod => {
+          const meal = business.menu[mealPeriod];
+          if (meal.sections) {
+            Object.values(meal.sections).forEach(section => {
+              if (section.items) {
+                menuItems.push(...section.items);
+              }
+            });
+          }
+        });
+      }
+
       const businessData = {
         name: business.name || business.business_name,
         address: business.address,
         hours: business.hours,
-        menu: business.menu || [],
+        menu: menuItems,
         drinks: business.drinks || [],
         happyHours: business.happyHours || [],
         specials: business.specials || [],

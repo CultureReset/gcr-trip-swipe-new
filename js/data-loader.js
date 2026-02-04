@@ -1,115 +1,134 @@
 /**
- * Data Loader - Sync system for GCR and CyberCheck
+ * Data Loader - Sync system for GCR Platform
  *
- * This file ensures both platforms read from the same data source.
  * Priority order:
- * 1. localStorage (edited data from CyberCheck)
- * 2. data.js (original data)
- *
- * When businesses edit their profile in CyberCheck, changes are saved to localStorage.
- * GCR reads from localStorage first, so edits appear immediately on tourist-facing profiles.
+ * 1. Supabase API (http://localhost:3002/api/gcr/businesses) - LIVE DATA
+ * 2. localStorage (backup/offline cache)
+ * 3. fallback-data.js (if both fail)
  */
 
 (function() {
   const STORAGE_KEY = 'gcr_business_data';
+  const API_URL = 'http://localhost:3002/api/gcr/businesses';
 
-  // Check if we have data in localStorage
-  const storedData = localStorage.getItem(STORAGE_KEY);
+  // Initialize with fallback data if available
+  if (typeof businessData !== 'undefined') {
+    window.allBusinesses = businessData;
+  }
 
-  if (storedData) {
+  // Fetch from Supabase API
+  async function loadFromAPI() {
     try {
-      const parsedData = JSON.parse(storedData);
+      console.log('📡 Fetching data from Supabase API...');
+      const response = await fetch(API_URL);
 
-      // Only use localStorage if it has reasonable data
-      // Check if localStorage has services data (should have businesses from multiple categories)
-      const categories = new Set(parsedData.map(b => b.category));
-      const hasServicesCategory = parsedData.some(b => b.category === 'services');
-      const currentCategories = new Set(allBusinesses.map(b => b.category));
-      const currentHasServices = allBusinesses.some(b => b.category === 'services');
-
-      // If current allBusinesses has more categories than localStorage, use current
-      if (currentCategories.size > categories.size || (currentHasServices && !hasServicesCategory)) {
-        console.log('📡 Current data is more complete than localStorage, updating storage');
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allBusinesses));
-      } else {
-        // Use localStorage data
-        window.allBusinesses = parsedData;
-        console.log('📡 Loaded business data from localStorage (CyberCheck edits active)', parsedData.length, 'businesses');
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
       }
-    } catch (e) {
-      console.error('Failed to parse localStorage data:', e);
-      // Fall back to current allBusinesses
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allBusinesses));
-      console.log('📡 Using current allBusinesses data');
-    }
-  } else {
-    // First load - initialize localStorage with current allBusinesses
-    if (typeof allBusinesses !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allBusinesses));
-      console.log('📡 Initialized localStorage with', allBusinesses.length, 'businesses');
+
+      const data = await response.json();
+
+      if (data.success && data.businesses && data.businesses.length > 0) {
+        window.allBusinesses = data.businesses;
+        // Cache in localStorage for offline use
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.businesses));
+        console.log(`✅ Loaded ${data.businesses.length} businesses from Supabase API`);
+
+        // Trigger custom event so pages know data is loaded
+        window.dispatchEvent(new CustomEvent('businessDataLoaded', { detail: { source: 'api', count: data.businesses.length } }));
+        return true;
+      } else {
+        throw new Error('Invalid API response');
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to load from API:', error.message);
+      return false;
     }
   }
 
+  // Fallback to localStorage if API fails
+  function loadFromLocalStorage() {
+    const storedData = localStorage.getItem(STORAGE_KEY);
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        if (parsedData.length > 0) {
+          window.allBusinesses = parsedData;
+          console.log(`📦 Loaded ${parsedData.length} businesses from localStorage (offline mode)`);
+          window.dispatchEvent(new CustomEvent('businessDataLoaded', { detail: { source: 'localStorage', count: parsedData.length } }));
+          return true;
+        }
+      } catch (e) {
+        console.error('Failed to parse localStorage:', e);
+      }
+    }
+    return false;
+  }
+
+  // Try API first, then localStorage, then use fallback data
+  (async function init() {
+    const apiSuccess = await loadFromAPI();
+
+    if (!apiSuccess) {
+      const localSuccess = loadFromLocalStorage();
+
+      if (!localSuccess) {
+        console.log('⚠️ Using fallback data (no API or localStorage available)');
+        window.dispatchEvent(new CustomEvent('businessDataLoaded', { detail: { source: 'fallback', count: window.allBusinesses?.length || 0 } }));
+      }
+    }
+  })();
+
   // Provide helper functions globally
   window.gcrDataLoader = {
-    // Get all businesses (from localStorage or fallback)
+    // Get all businesses
     getAllBusinesses: function() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch (e) {
-          return typeof allBusinesses !== 'undefined' ? allBusinesses : [];
-        }
-      }
       return typeof allBusinesses !== 'undefined' ? allBusinesses : [];
     },
 
     // Get single business by ID
     getBusinessById: function(id) {
       const businesses = this.getAllBusinesses();
-      return businesses.find(b => b.id === id);
+      return businesses.find(b => b.id === id || b.business_id === id || b.place_id === id);
     },
 
-    // Update business (used by CyberCheck)
+    // Update business (saves to localStorage, will sync to Supabase on next reload)
     updateBusiness: function(id, updates) {
       const businesses = this.getAllBusinesses();
-      const index = businesses.findIndex(b => b.id === id);
+      const index = businesses.findIndex(b => b.id === id || b.business_id === id);
 
       if (index !== -1) {
         businesses[index] = { ...businesses[index], ...updates };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(businesses));
-
-        // Update global variable for immediate effect
-        if (typeof window !== 'undefined') {
-          window.allBusinesses = businesses;
-        }
-
+        window.allBusinesses = businesses;
         console.log('✅ Business updated:', id);
         return true;
       }
       return false;
     },
 
-    // Reset to original data (admin only)
-    resetData: function() {
-      if (confirm('⚠️ This will reset all business data to original values. Are you sure?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-      }
+    // Save all businesses (used by CSV import)
+    saveAllBusinesses: function(businesses) {
+      window.allBusinesses = businesses;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(businesses));
+      console.log(`✅ Saved ${businesses.length} businesses to localStorage`);
     },
 
     // Get sync status
     getSyncStatus: function() {
-      const stored = localStorage.getItem(STORAGE_KEY);
       return {
-        hasSyncedData: !!stored,
-        lastModified: stored ? 'User modified' : 'Original data',
-        businessCount: this.getAllBusinesses().length
+        source: 'Supabase API',
+        businessCount: this.getAllBusinesses().length,
+        apiUrl: API_URL
       };
+    },
+
+    // Refresh data from API
+    refresh: async function() {
+      await loadFromAPI();
     }
   };
 
-  // Log sync status
-  console.log('🔄 Data Loader Status:', window.gcrDataLoader.getSyncStatus());
+  // Log sync status after init
+  console.log('🔄 Data Loader initialized');
 })();

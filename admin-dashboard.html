@@ -1157,6 +1157,22 @@
             <h3 style="font-size: 18px; font-weight: 600;">Happy Hour</h3>
             <button onclick="addHappyHourItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Happy Hour Item</button>
           </div>
+
+          <!-- Happy Hour Schedule -->
+          <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #495057;">📅 Happy Hour Schedule</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px;">Days</label>
+                <input type="text" id="hhDays" class="form-input" placeholder="Monday - Friday" style="padding: 8px;">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px;">Time Range</label>
+                <input type="text" id="hhTimeRange" class="form-input" placeholder="3:00 PM - 6:00 PM" style="padding: 8px;">
+              </div>
+            </div>
+          </div>
+
           <div id="happyHourItemsList"></div>
         </div>
 
@@ -1166,6 +1182,33 @@
             <h3 style="font-size: 18px; font-weight: 600;">Specials</h3>
             <button onclick="addSpecialItem()" class="btn-primary" style="padding: 8px 16px; font-size: 14px;">+ Add Special</button>
           </div>
+
+          <!-- Bulk Settings -->
+          <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #856404;">⚡ Bulk Settings (Apply to All Specials)</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px;">Day</label>
+                <select id="bulkSpecialDay" class="form-input" style="padding: 8px;">
+                  <option value="">-- Select Day --</option>
+                  <option value="monday">Monday</option>
+                  <option value="tuesday">Tuesday</option>
+                  <option value="wednesday">Wednesday</option>
+                  <option value="thursday">Thursday</option>
+                  <option value="friday">Friday</option>
+                  <option value="saturday">Saturday</option>
+                  <option value="sunday">Sunday</option>
+                  <option value="daily">Daily</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" style="font-size: 12px;">Time</label>
+                <input type="text" id="bulkSpecialTime" class="form-input" placeholder="3:00 PM - 6:00 PM" style="padding: 8px;">
+              </div>
+              <button onclick="applyBulkSpecialSettings()" class="btn-primary" style="padding: 8px 16px; font-size: 14px; white-space: nowrap;">Apply to All</button>
+            </div>
+          </div>
+
           <div id="specialsItemsList"></div>
         </div>
 
@@ -2359,14 +2402,14 @@
     // GCR BUSINESSES MANAGEMENT
     // ========================================
 
-    const GCR_API_URL = 'http://localhost:3002/api';
+    const GCR_API_URL = 'http://localhost:3002/api/gcr';
     let allGCRBusinesses = [];
     let filteredGCRBusinesses = [];
 
     // Load GCR businesses from Supabase
     async function loadGCRBusinesses() {
       try {
-        const response = await fetch(`${GCR_API_URL}/admin/businesses`);
+        const response = await fetch(`${GCR_API_URL}/businesses`);
         const data = await response.json();
 
         if (data.success) {
@@ -2577,6 +2620,16 @@
 
     // Load GCR businesses when page loads
     window.addEventListener('DOMContentLoaded', function() {
+      // Clear localStorage if quota exceeded to allow fresh data load
+      try {
+        const testKey = '_storage_test_';
+        localStorage.setItem(testKey, 'test');
+        localStorage.removeItem(testKey);
+      } catch (e) {
+        console.warn('⚠️ localStorage quota exceeded, clearing old data...');
+        localStorage.clear();
+      }
+
       loadGCRBusinesses();
 
       // Add event listener for CSV data type selector
@@ -2601,21 +2654,95 @@
 
     // Open advanced editor
     function openAdvancedEditor() {
+      console.log('🔵 openAdvancedEditor CALLED!');
       const businessId = document.getElementById('editBusinessId').value;
+      console.log('🔵 Looking for business ID:', businessId);
+      console.log('🔵 allGCRBusinesses has', allGCRBusinesses.length, 'businesses');
       currentEditingBusiness = allGCRBusinesses.find(b => b.id === businessId);
 
-      if (!currentEditingBusiness) return;
+      if (!currentEditingBusiness) {
+        console.error('❌ Business not found in allGCRBusinesses:', businessId);
+        console.log('Available businesses:', allGCRBusinesses.map(b => b.id));
+        alert('⚠️ Business data not loaded. Refreshing from Supabase...');
 
-      // Load existing data
+        // Clear localStorage and reload
+        localStorage.removeItem('gcr_business_data');
+        window.location.reload();
+        return;
+      }
+
+      console.log('✅ Found business:', currentEditingBusiness.name, 'with menu type:', typeof currentEditingBusiness.menu);
+
+      // Load existing data - handle both flat array and nested object menu structures
+      let menuItems = [];
+      let drinkItems = [];
+      let happyHourItems = [];
+
+      if (Array.isArray(currentEditingBusiness.menu)) {
+        // Old flat structure
+        menuItems = currentEditingBusiness.menu;
+      } else if (currentEditingBusiness.menu && typeof currentEditingBusiness.menu === 'object') {
+        // New nested structure: extract and flatten
+        Object.keys(currentEditingBusiness.menu).forEach(mealPeriod => {
+          const meal = currentEditingBusiness.menu[mealPeriod];
+
+          // Extract drinks to separate section
+          if (mealPeriod.toLowerCase() === 'drinks') {
+            if (meal.sections) {
+              Object.values(meal.sections).forEach(section => {
+                if (section.items) {
+                  section.items.forEach(item => {
+                    drinkItems.push({
+                      ...item,
+                      category: section.name || 'Cocktails'
+                    });
+                  });
+                }
+              });
+            }
+            return; // Skip adding to menu
+          }
+
+          // Extract happy hour to separate section
+          if (mealPeriod.toLowerCase() === 'happyhour') {
+            if (meal.sections) {
+              Object.values(meal.sections).forEach(section => {
+                if (section.items) {
+                  happyHourItems.push(...section.items);
+                }
+              });
+            }
+            return; // Skip adding to menu
+          }
+
+          // Regular menu items (lunch, dinner, kids, etc.)
+          if (meal.sections) {
+            Object.values(meal.sections).forEach(section => {
+              if (section.items) {
+                section.items.forEach(item => {
+                  menuItems.push({
+                    ...item,
+                    mealPeriod: meal.name,
+                    section: section.name,
+                    category: `${meal.name} - ${section.name}`
+                  });
+                });
+              }
+            });
+          }
+        });
+      }
+
       advancedData = {
-        menu: currentEditingBusiness.menu || [],
-        drinks: currentEditingBusiness.drinks || [],
-        happy_hour: currentEditingBusiness.happy_hour || null,
-        specials: currentEditingBusiness.specials || [],
-        events: currentEditingBusiness.events || [],
-        feedPosts: currentEditingBusiness.feedPosts || []
+        menu: Array.isArray(menuItems) ? menuItems : [],
+        drinks: drinkItems.length > 0 ? drinkItems : (Array.isArray(currentEditingBusiness.drinks) ? currentEditingBusiness.drinks : []),
+        happy_hour: happyHourItems.length > 0 ? { items: happyHourItems } : (currentEditingBusiness.happy_hour || { items: [] }),
+        specials: Array.isArray(currentEditingBusiness.specials) ? currentEditingBusiness.specials : [],
+        events: Array.isArray(currentEditingBusiness.events) ? currentEditingBusiness.events : [],
+        feedPosts: Array.isArray(currentEditingBusiness.feedPosts) ? currentEditingBusiness.feedPosts : []
       };
 
+      console.log('🔍 advancedData.menu:', advancedData.menu, 'length:', advancedData.menu.length);
       renderMenuItems();
       renderDrinkItems();
       renderHappyHourItems();
@@ -2653,7 +2780,8 @@
         description: '',
         price: '',
         image: '',
-        category: 'lunch',
+        mealPeriod: 'Lunch',
+        section: 'Other',
         dietary: []
       };
       advancedData.menu.push(newItem);
@@ -2662,6 +2790,13 @@
 
     function renderMenuItems() {
       const container = document.getElementById('menuItemsList');
+
+      // Ensure advancedData.menu is an array
+      if (!Array.isArray(advancedData.menu)) {
+        console.error('❌ advancedData.menu is not an array:', typeof advancedData.menu, advancedData.menu);
+        advancedData.menu = [];
+      }
+
       if (advancedData.menu.length === 0) {
         container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No menu items yet. Click "+ Add Menu Item" to start.</p>';
         return;
@@ -2685,19 +2820,30 @@
               <input type="text" class="form-input" value="${item.price || ''}" onchange="updateMenuItem(${index}, 'price', this.value)" placeholder="$12.99" style="padding: 10px;">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label" style="font-size: 12px;">Category</label>
-              <select class="form-input" onchange="updateMenuItem(${index}, 'category', this.value)" style="padding: 10px;">
-                <option value="breakfast" ${item.category === 'breakfast' ? 'selected' : ''}>Breakfast</option>
-                <option value="lunch" ${item.category === 'lunch' ? 'selected' : ''}>Lunch</option>
-                <option value="dinner" ${item.category === 'dinner' ? 'selected' : ''}>Dinner</option>
-                <option value="appetizers" ${item.category === 'appetizers' ? 'selected' : ''}>Appetizers</option>
-                <option value="desserts" ${item.category === 'desserts' ? 'selected' : ''}>Desserts</option>
-                <option value="seafood" ${item.category === 'seafood' ? 'selected' : ''}>Seafood</option>
+              <label class="form-label" style="font-size: 12px;">Meal Period</label>
+              <select class="form-input" onchange="updateMenuItem(${index}, 'mealPeriod', this.value)" style="padding: 10px;">
+                <option value="Breakfast" ${item.mealPeriod === 'Breakfast' ? 'selected' : ''}>Breakfast</option>
+                <option value="Lunch" ${item.mealPeriod === 'Lunch' ? 'selected' : ''}>Lunch</option>
+                <option value="Dinner" ${item.mealPeriod === 'Dinner' ? 'selected' : ''}>Dinner</option>
+                <option value="Kids" ${item.mealPeriod === 'Kids' ? 'selected' : ''}>Kids</option>
+                <option value="HappyHour" ${item.mealPeriod === 'HappyHour' ? 'selected' : ''}>Happy Hour</option>
+                <option value="Drinks" ${item.mealPeriod === 'Drinks' ? 'selected' : ''}>Drinks</option>
               </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Section</label>
+              <input type="text" class="form-input" value="${item.section || 'Other'}" onchange="updateMenuItem(${index}, 'section', this.value)" placeholder="Appetizers, Entrees, etc." style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Image URL</label>
-              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateMenuItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="url" class="form-input" value="${item.image || ''}" onchange="updateMenuItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px; flex: 1;">
+                <span style="color: #64748b; font-size: 13px;">OR</span>
+                <label class="btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                  📁 Upload
+                  <input type="file" accept="image/*" onchange="uploadMenuItemImage(${index}, this.files[0])" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
@@ -2747,6 +2893,28 @@
       } else {
         advancedData.menu[index].dietary = advancedData.menu[index].dietary.filter(d => d !== option);
       }
+    }
+
+    function uploadMenuItemImage(index, file) {
+      if (!file) return;
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image too large! Please use an image under 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Convert to base64 and store
+        advancedData.menu[index].image = e.target.result;
+        renderMenuItems();
+        alert('✅ Image uploaded successfully!');
+      };
+      reader.onerror = function() {
+        alert('❌ Error uploading image. Please try again.');
+      };
+      reader.readAsDataURL(file);
     }
 
     // Drinks Management (similar structure)
@@ -2799,7 +2967,14 @@
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Image URL</label>
-              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateDrinkItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="url" class="form-input" value="${item.image || ''}" onchange="updateDrinkItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px; flex: 1;">
+                <span style="color: #64748b; font-size: 13px;">OR</span>
+                <label class="btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                  📁 Upload
+                  <input type="file" accept="image/*" onchange="uploadDrinkImage(${index}, this.files[0])" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
@@ -2819,6 +2994,28 @@
         advancedData.drinks.splice(index, 1);
         renderDrinkItems();
       }
+    }
+
+    function uploadDrinkImage(index, file) {
+      if (!file) return;
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image too large! Please use an image under 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Convert to base64 and store
+        advancedData.drinks[index].image = e.target.result;
+        renderDrinkItems();
+        alert('✅ Image uploaded successfully!');
+      };
+      reader.onerror = function() {
+        alert('❌ Error uploading image. Please try again.');
+      };
+      reader.readAsDataURL(file);
     }
 
     // Happy Hour Management
@@ -2863,7 +3060,14 @@
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Image URL</label>
-              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateHappyHourItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="url" class="form-input" value="${item.image || ''}" onchange="updateHappyHourItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px; flex: 1;">
+                <span style="color: #64748b; font-size: 13px;">OR</span>
+                <label class="btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                  📁 Upload
+                  <input type="file" accept="image/*" onchange="uploadHappyHourImage(${index}, this.files[0])" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
@@ -2885,6 +3089,28 @@
       }
     }
 
+    function uploadHappyHourImage(index, file) {
+      if (!file) return;
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image too large! Please use an image under 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Convert to base64 and store
+        advancedData.happy_hour.items[index].image = e.target.result;
+        renderHappyHourItems();
+        alert('✅ Image uploaded successfully!');
+      };
+      reader.onerror = function() {
+        alert('❌ Error uploading image. Please try again.');
+      };
+      reader.readAsDataURL(file);
+    }
+
     // Specials Management
     function addSpecialItem() {
       const newItem = {
@@ -2893,7 +3119,8 @@
         description: '',
         price: '',
         image: '',
-        day: 'monday'
+        day: 'monday',
+        time: ''
       };
       advancedData.specials.push(newItem);
       renderSpecialItems();
@@ -2937,8 +3164,19 @@
               </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Time</label>
+              <input type="text" class="form-input" value="${item.time || ''}" onchange="updateSpecialItem(${index}, 'time', this.value)" placeholder="3:00 PM - 6:00 PM" style="padding: 10px;">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Image URL</label>
-              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateSpecialItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="url" class="form-input" value="${item.image || ''}" onchange="updateSpecialItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px; flex: 1;">
+                <span style="color: #64748b; font-size: 13px;">OR</span>
+                <label class="btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                  📁 Upload
+                  <input type="file" accept="image/*" onchange="uploadSpecialImage(${index}, this.files[0])" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
@@ -2957,6 +3195,47 @@
       if (confirm('Delete this special?')) {
         advancedData.specials.splice(index, 1);
         renderSpecialItems();
+      }
+    }
+
+    function uploadSpecialImage(index, file) {
+      if (!file) return;
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image too large! Please use an image under 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Convert to base64 and store
+        advancedData.specials[index].image = e.target.result;
+        renderSpecialItems();
+        alert('✅ Image uploaded successfully!');
+      };
+      reader.onerror = function() {
+        alert('❌ Error uploading image. Please try again.');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function applyBulkSpecialSettings() {
+      const bulkDay = document.getElementById('bulkSpecialDay').value;
+      const bulkTime = document.getElementById('bulkSpecialTime').value;
+
+      if (!bulkDay && !bulkTime) {
+        alert('Please select a day and/or time to apply to all specials.');
+        return;
+      }
+
+      if (confirm(`Apply ${bulkDay ? bulkDay.charAt(0).toUpperCase() + bulkDay.slice(1) : ''} ${bulkTime ? bulkTime : ''} to all ${advancedData.specials.length} specials?`)) {
+        advancedData.specials.forEach(special => {
+          if (bulkDay) special.day = bulkDay;
+          if (bulkTime) special.time = bulkTime;
+        });
+        renderSpecialItems();
+        alert('✅ Bulk settings applied to all specials!');
       }
     }
 
@@ -3009,7 +3288,14 @@
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Image URL</label>
-              <input type="url" class="form-input" value="${item.image || ''}" onchange="updateEventItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="url" class="form-input" value="${item.image || ''}" onchange="updateEventItem(${index}, 'image', this.value)" placeholder="https://..." style="padding: 10px; flex: 1;">
+                <span style="color: #64748b; font-size: 13px;">OR</span>
+                <label class="btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                  📁 Upload
+                  <input type="file" accept="image/*" onchange="uploadEventImage(${index}, this.files[0])" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
@@ -3031,6 +3317,28 @@
       }
     }
 
+    function uploadEventImage(index, file) {
+      if (!file) return;
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image too large! Please use an image under 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Convert to base64 and store
+        advancedData.events[index].image = e.target.result;
+        renderEventItems();
+        alert('✅ Image uploaded successfully!');
+      };
+      reader.onerror = function() {
+        alert('❌ Error uploading image. Please try again.');
+      };
+      reader.readAsDataURL(file);
+    }
+
     // Live Feed Posts Management
     function addFeedPost() {
       const newPost = {
@@ -3039,6 +3347,8 @@
         imageUrl: '',
         platform: 'instagram',
         timestamp: new Date().toISOString(),
+        businessId: currentEditingBusiness ? currentEditingBusiness.id : '',
+        businessName: currentEditingBusiness ? currentEditingBusiness.name : '',
         likes: 0,
         comments: 0,
         shares: 0
@@ -3071,12 +3381,26 @@
               </select>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="font-size: 12px;">Business</label>
+              <select class="form-input" onchange="updateFeedPost(${index}, 'businessId', this.value)" style="padding: 10px;">
+                <option value="">-- Select Business --</option>
+                ${(allGCRBusinesses || []).map(b => `<option value="${b.id}" ${post.businessId === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Date/Time</label>
               <input type="datetime-local" class="form-input" value="${post.timestamp ? new Date(post.timestamp).toISOString().slice(0, 16) : ''}" onchange="updateFeedPost(${index}, 'timestamp', this.value)" style="padding: 10px;">
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label" style="font-size: 12px;">Photo URL</label>
-              <input type="url" class="form-input" value="${post.imageUrl || ''}" onchange="updateFeedPost(${index}, 'imageUrl', this.value)" placeholder="https://your-photo-url.jpg" style="padding: 10px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="url" class="form-input" value="${post.imageUrl || ''}" onchange="updateFeedPost(${index}, 'imageUrl', this.value)" placeholder="https://..." style="padding: 10px; flex: 1;">
+                <span style="color: #64748b; font-size: 13px;">OR</span>
+                <label class="btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap;">
+                  📁 Upload
+                  <input type="file" accept="image/*" onchange="uploadFeedPostImage(${index}, this.files[0])" style="display: none;">
+                </label>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-top: 12px; margin-bottom: 0;">
@@ -3119,6 +3443,28 @@
         advancedData.feedPosts.splice(index, 1);
         renderFeedPosts();
       }
+    }
+
+    function uploadFeedPostImage(index, file) {
+      if (!file) return;
+
+      // Check file size (max 5MB for feed photos)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image too large! Please use an image under 5MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Convert to base64 and store
+        advancedData.feedPosts[index].imageUrl = e.target.result;
+        renderFeedPosts(); // Re-render to show preview
+        alert('✅ Image uploaded successfully!');
+      };
+      reader.onerror = function() {
+        alert('❌ Error uploading image. Please try again.');
+      };
+      reader.readAsDataURL(file);
     }
 
     // CSV Format Help
@@ -3457,10 +3803,91 @@
     async function saveAdvancedChanges() {
       if (!currentEditingBusiness) return;
 
+      // Reconstruct nested menu structure from flat array
+      const nestedMenu = {};
+
+      // Add regular menu items (lunch, dinner, kids, etc.)
+      advancedData.menu.forEach(item => {
+        const mealPeriod = (item.mealPeriod || 'Dinner').toLowerCase();
+        const sectionName = item.section || 'Other';
+        const sectionKey = sectionName.toLowerCase().replace(/\s+/g, '_');
+
+        // Create meal period if doesn't exist
+        if (!nestedMenu[mealPeriod]) {
+          nestedMenu[mealPeriod] = {
+            name: item.mealPeriod || 'Dinner',
+            sections: {}
+          };
+        }
+
+        // Create section if doesn't exist
+        if (!nestedMenu[mealPeriod].sections[sectionKey]) {
+          nestedMenu[mealPeriod].sections[sectionKey] = {
+            name: sectionName,
+            items: []
+          };
+        }
+
+        // Add item to section (remove metadata fields)
+        const cleanItem = {
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          image: item.image || '',
+          dietary: item.dietary || []
+        };
+        nestedMenu[mealPeriod].sections[sectionKey].items.push(cleanItem);
+      });
+
+      // Add drinks to nested menu structure
+      if (advancedData.drinks && advancedData.drinks.length > 0) {
+        nestedMenu.drinks = {
+          name: 'Drinks',
+          sections: {}
+        };
+
+        advancedData.drinks.forEach(drink => {
+          const category = (drink.category || 'Cocktails').toLowerCase().replace(/\s+/g, '_');
+          if (!nestedMenu.drinks.sections[category]) {
+            nestedMenu.drinks.sections[category] = {
+              name: drink.category || 'Cocktails',
+              items: []
+            };
+          }
+
+          nestedMenu.drinks.sections[category].items.push({
+            name: drink.name,
+            description: drink.description,
+            price: drink.price,
+            image: drink.image || '',
+            dietary: drink.dietary || []
+          });
+        });
+      }
+
+      // Add happy hour to nested menu structure
+      if (advancedData.happy_hour && advancedData.happy_hour.items && advancedData.happy_hour.items.length > 0) {
+        nestedMenu.happyhour = {
+          name: 'HappyHour',
+          sections: {
+            other: {
+              name: 'Other',
+              items: advancedData.happy_hour.items.map(item => ({
+                name: item.name,
+                description: item.description,
+                price: item.price,
+                image: item.image || '',
+                dietary: item.dietary || []
+              }))
+            }
+          }
+        };
+      }
+
       const updates = {
-        menu: advancedData.menu,
-        drinks: advancedData.drinks,
-        happy_hour: advancedData.happy_hour,
+        menu: nestedMenu,
+        drinks: [], // Keep empty for backward compatibility
+        happy_hour: advancedData.happy_hour || { items: [] }, // Keep for backward compatibility
         has_happy_hour: (advancedData.happy_hour && advancedData.happy_hour.items && advancedData.happy_hour.items.length > 0),
         specials: advancedData.specials,
         events: advancedData.events,

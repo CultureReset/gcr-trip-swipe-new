@@ -1135,85 +1135,95 @@ Extract ALL relevant terms - food items, activities, business types, features th
     }
   }
 
-  startAISearch() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Voice search is not supported in your browser. Please type your question instead.');
-      // Focus on search input for typing
-      if (this.searchInput) {
-        this.searchInput.focus();
-        this.searchInput.placeholder = 'Ask AI: "seafood with outdoor seating" or "happy hour specials today"...';
+  async startAISearch() {
+    // Use Grok AI to parse and search with natural language
+    if (typeof GrokSearch === 'undefined' || !window.grokSearch) {
+      alert('Grok AI Search is loading... Please try again in a moment.');
+      return;
+    }
+
+    // Check for voice recognition support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      // Fallback to text input if voice not supported
+      const query = prompt('What are you looking for?');
+      if (query) {
+        await this.performGrokSearch(query);
       }
       return;
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // Start voice recognition
     const recognition = new SpeechRecognition();
-
-    recognition.lang = 'en-US';
+    recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    recognition.lang = 'en-US';
 
-    recognition.start();
-
-    const aiBtn = document.querySelector('.search-ai-btn');
-    if (aiBtn) {
-      aiBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-      aiBtn.innerHTML = `
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <circle cx="8" cy="8" r="2"/>
-          <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1"/>
-        </svg>
-        Listening...
-      `;
-    }
-
+    // Show listening indicator
     if (this.searchInput) {
-      this.searchInput.placeholder = 'Listening... Ask your question';
+      this.searchInput.placeholder = '🎤 Listening...';
     }
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      console.log('🎤 AI heard:', transcript);
+    recognition.onresult = async (event) => {
+      const query = event.results[0][0].transcript;
+      console.log('🎤 Voice query:', query);
 
       if (this.searchInput) {
-        this.searchInput.value = transcript;
-        this.currentQuery = transcript;
-        // Redirect directly to results page with AI-powered search
-        this.saveRecentSearch(transcript);
-        window.location.href = `search-results.html?q=${encodeURIComponent(transcript)}`;
+        this.searchInput.value = query;
+        this.searchInput.placeholder = 'Search businesses...';
       }
-    };
 
-    recognition.onend = () => {
-      if (aiBtn) {
-        aiBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        aiBtn.innerHTML = `
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M8 0a1 1 0 0 1 1 1v5.268l4.562-2.634a1 1 0 1 1 1 1.732L10 8l4.562 2.634a1 1 0 1 1-1 1.732L9 9.732V15a1 1 0 1 1-2 0V9.732l-4.562 2.634a1 1 0 1 1-1-1.732L6 8 1.438 5.366a1 1 0 0 1 1-1.732L7 6.268V1a1 1 0 0 1 1-1z"/>
-          </svg>
-          AI
-        `;
-      }
-      if (this.searchInput) {
-        this.searchInput.placeholder = 'Search restaurants, activities, locations...';
-      }
+      await this.performGrokSearch(query);
     };
 
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      if (aiBtn) {
-        aiBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        aiBtn.innerHTML = `
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M8 0a1 1 0 0 1 1 1v5.268l4.562-2.634a1 1 0 1 1 1 1.732L10 8l4.562 2.634a1 1 0 1 1-1 1.732L9 9.732V15a1 1 0 1 1-2 0V9.732l-4.562 2.634a1 1 0 1 1-1-1.732L6 8 1.438 5.366a1 1 0 0 1 1-1.732L7 6.268V1a1 1 0 0 1 1-1z"/>
-          </svg>
-          AI
-        `;
-      }
+      console.error('Voice recognition error:', event.error);
       if (this.searchInput) {
-        this.searchInput.placeholder = 'Search restaurants, activities, locations...';
+        this.searchInput.placeholder = 'Search businesses...';
+      }
+      alert('Voice recognition error. Please try again.');
+    };
+
+    recognition.onend = () => {
+      if (this.searchInput) {
+        this.searchInput.placeholder = 'Search businesses...';
       }
     };
+
+    recognition.start();
+  }
+
+  async performGrokSearch(query) {
+    if (!query || !window.grokSearch) return;
+
+    // Show loading state
+    if (this.suggestionsContainer) {
+      this.suggestionsContainer.style.display = 'block';
+      this.suggestionsContainer.innerHTML = '<div style="padding: 20px; text-align: center;">🤖 Searching with AI...</div>';
+    }
+
+    try {
+      // Use Grok AI to search businesses
+      const searchResults = await window.grokSearch.searchBusinesses(query, this.allBusinesses);
+
+      // Format and display results
+      if (searchResults && searchResults.results.length > 0) {
+        const html = window.grokSearch.formatResults(searchResults);
+        if (this.suggestionsContainer) {
+          this.suggestionsContainer.innerHTML = html;
+          this.suggestionsContainer.style.display = 'block';
+        }
+      } else {
+        if (this.suggestionsContainer) {
+          this.suggestionsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No results found. Try a different search.</div>';
+        }
+      }
+    } catch (error) {
+      console.error('Grok search error:', error);
+      if (this.suggestionsContainer) {
+        this.suggestionsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #ef4444;">Search error. Please try again.</div>';
+      }
+    }
   }
 
   startVoiceSearch() {

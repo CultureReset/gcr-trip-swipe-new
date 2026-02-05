@@ -29,6 +29,41 @@ function parseRecurringDays(dayString) {
   return days;
 }
 
+// Helper function to convert military time to regular time
+function formatTime(timeString) {
+  if (!timeString) return '';
+
+  // If it already has AM/PM and a range, return as-is
+  if (/am|pm/i.test(timeString) && timeString.includes('-')) return timeString;
+
+  // Handle time ranges like "16:00-18:00", "4pm-6pm", "1600-1800"
+  if (timeString.includes('-') || timeString.includes('–') || timeString.includes('to')) {
+    const separator = timeString.includes('-') ? '-' : (timeString.includes('–') ? '–' : 'to');
+    const parts = timeString.split(separator);
+    if (parts.length === 2) {
+      const startTime = formatTime(parts[0].trim());
+      const endTime = formatTime(parts[1].trim());
+      return `${startTime} - ${endTime}`;
+    }
+  }
+
+  // If already has AM/PM, return as-is
+  if (/am|pm/i.test(timeString)) return timeString;
+
+  // Match patterns like "16:00", "1600", "4", "16"
+  const match = timeString.match(/(\d{1,2}):?(\d{2})?/);
+  if (!match) return timeString;
+
+  let hours = parseInt(match[1]);
+  const minutes = match[2] || '00';
+
+  // Convert to 12-hour format
+  const period = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12; // Convert 0 to 12 for midnight, 13-23 to 1-11
+
+  return `${hours}:${minutes} ${period}`;
+}
+
 // Generate happy hours for next 7 days
 function generateHappyHoursByDay() {
   const dayMap = {};
@@ -167,7 +202,19 @@ function generateHappyHoursByDay() {
             }
 
             // Extract time - check multiple sources
-            let time = special.days || business.happyHour || special.time;
+            let time = special.time || special.days || business.happyHour;
+
+            // Check for separate start/end time fields
+            if (special.startTime && special.endTime) {
+              time = `${special.startTime} - ${special.endTime}`;
+            } else if (special.start_time && special.end_time) {
+              time = `${special.start_time} - ${special.end_time}`;
+            } else if (business.happyHourStartTime && business.happyHourEndTime) {
+              time = `${business.happyHourStartTime} - ${business.happyHourEndTime}`;
+            } else if (business.happy_hour_start && business.happy_hour_end) {
+              time = `${business.happy_hour_start} - ${business.happy_hour_end}`;
+            }
+
             // Check if dict has description or title with time info
             if (!time && !Array.isArray(happyHourData)) {
               time = happyHourData.description || happyHourData.title;
@@ -337,7 +384,7 @@ function displayHappyHoursByDay() {
               <div class="special-title">
                 <h3 class="special-business-name">
                   ${business.businessName}
-                  ${business.time ? `<span style="font-size: 14px; font-weight: 600; color: #ff6b35; margin-left: 12px;">⏰ ${business.time}</span>` : ''}
+                  ${business.time ? `<span style="font-size: 14px; font-weight: 600; color: #ff6b35; margin-left: 12px;">⏰ ${formatTime(business.time)}</span>` : ''}
                 </h3>
                 <span class="special-badge" style="background: #ff6b35;">🍹 Happy Hour</span>
               </div>
@@ -345,7 +392,7 @@ function displayHappyHoursByDay() {
                 ${business.time ? `
                   <div class="special-meta-item">
                     <span class="special-meta-icon">🕐</span>
-                    <span>${business.time}</span>
+                    <span>${formatTime(business.time)}</span>
                   </div>
                 ` : ''}
                 <div class="special-meta-item">

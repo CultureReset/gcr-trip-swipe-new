@@ -84,6 +84,45 @@ document.addEventListener('DOMContentLoaded', () => {
 function generateSubcategoryChips() {
   const subcategorySet = new Set();
 
+  // Known valid restaurant categories/cuisines
+  const validCategories = new Set([
+    'seafood', 'american', 'mexican', 'italian', 'asian', 'pizza', 'bar', 'grill',
+    'chinese', 'japanese', 'thai', 'sushi', 'bbq', 'steakhouse', 'breakfast',
+    'brunch', 'lunch', 'dinner', 'cafe', 'diner', 'burgers', 'sandwiches',
+    'cajun', 'creole', 'southern', 'mediterranean', 'greek', 'french', 'indian',
+    'vietnamese', 'korean', 'fusion', 'vegan', 'vegetarian', 'wings', 'tacos',
+    'fine dining', 'casual dining', 'fast food', 'family friendly', 'sports bar',
+    'pub', 'gastropub', 'tapas', 'soul food', 'comfort food', 'bistro'
+  ]);
+
+  // Smart filter function
+  function isValidSubcategory(sub) {
+    if (!sub || typeof sub !== 'string') return false;
+
+    const cleaned = sub.toLowerCase().trim();
+
+    // Filter out URLs
+    if (cleaned.includes('http') || cleaned.includes('www.') || cleaned.includes('.com') || cleaned.includes('.net')) {
+      return false;
+    }
+
+    // Filter out very long strings (likely descriptions, not categories)
+    if (cleaned.length > 30) return false;
+
+    // Filter out strings with suspicious characters
+    if (/[<>{}[\]\\\/]/.test(cleaned)) return false;
+
+    // Filter out sentences (contain multiple spaces or punctuation)
+    if ((cleaned.match(/\s/g) || []).length > 2) return false;
+
+    // Check if it matches known valid categories or contains restaurant-related keywords
+    const keywords = ['food', 'grill', 'bar', 'cuisine', 'kitchen', 'dining', 'restaurant'];
+    const matchesValid = validCategories.has(cleaned) ||
+                        keywords.some(keyword => cleaned.includes(keyword));
+
+    return matchesValid;
+  }
+
   // Collect all unique subcategories from restaurants
   allRestaurants.forEach(restaurant => {
     if (restaurant.subcategory) {
@@ -93,18 +132,28 @@ function generateSubcategoryChips() {
         : restaurant.subcategory.split(',').map(s => s.trim());
 
       subcategories.forEach(sub => {
-        if (sub) subcategorySet.add(sub);
+        if (isValidSubcategory(sub)) {
+          // Normalize the category name
+          const normalized = sub.trim();
+          subcategorySet.add(normalized);
+        }
       });
     }
     // Also check cuisine field for backward compatibility
     if (restaurant.cuisine) {
       const cuisineTypes = restaurant.cuisine.split('•').map(c => c.trim()).filter(c => c);
-      cuisineTypes.forEach(c => subcategorySet.add(c));
+      cuisineTypes.forEach(c => {
+        if (isValidSubcategory(c)) {
+          subcategorySet.add(c.trim());
+        }
+      });
     }
   });
 
   // Sort subcategories alphabetically
   const subcategories = Array.from(subcategorySet).sort();
+
+  console.log('✅ Valid subcategories found:', subcategories);
 
   // Generate chips HTML
   const chipContainer = document.querySelector('.cuisine-filter-scroll');
@@ -238,6 +287,13 @@ function displayRestaurants(restaurants) {
     `;
     return;
   }
+
+  // Debug: Check if restaurants have hours field
+  console.log('Sample restaurant hours data:', restaurants.slice(0, 3).map(r => ({
+    name: r.name,
+    hours: r.hours,
+    hasHours: !!r.hours
+  })));
 
   grid.innerHTML = restaurants.map(restaurant => {
     const businessId = restaurant.id || restaurant.business_id;

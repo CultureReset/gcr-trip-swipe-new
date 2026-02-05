@@ -1,7 +1,7 @@
 // GCR Business Loader
 // Loads businesses from Supabase API
+// NOTE: allBusinesses is declared in data.js, not here
 
-let allBusinesses = [];
 let isLoading = false;
 let loadError = null;
 
@@ -116,10 +116,13 @@ loadBusinesses()
 window.allBusinesses = allBusinesses;
 window.loadBusinesses = loadBusinesses;
 
-// Make allBusinesses reactive
+// Make allBusinesses reactive - use internal storage to avoid infinite recursion
+let _allBusinessesInternal = allBusinesses;
 Object.defineProperty(window, 'allBusinesses', {
-  get: function() { return allBusinesses; },
-  set: function(val) { allBusinesses = val; }
+  get: function() { return _allBusinessesInternal; },
+  set: function(val) {
+    _allBusinessesInternal = val;
+  }
 });
 
 // Compatibility: loadMasterData function for pages that expect it

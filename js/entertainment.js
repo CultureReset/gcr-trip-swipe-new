@@ -336,12 +336,22 @@ function renderEntertainment() {
                   <span>${events.length} Event${events.length !== 1 ? 's' : ''}</span>
                 </div>
               ` : ''}
-              ${venue.hours ? `
-                <div class="special-meta-item">
-                  <span class="special-meta-icon">🕐</span>
-                  <span>${venue.hours}</span>
-                </div>
-              ` : ''}
+              ${venue.hours && typeof getBusinessStatus === 'function' ? (() => {
+                const status = getBusinessStatus(venue);
+                return status.badge ? `
+                  <div class="special-meta-item">
+                    <div class="business-status-badge ${status.class}">
+                      ${status.badge}
+                    </div>
+                    ${status.text ? `<div class="business-status-text" style="font-size: 13px; color: #6B7280; margin-top: 4px;">${status.text}</div>` : ''}
+                  </div>
+                ` : `
+                  <div class="special-meta-item">
+                    <span class="special-meta-icon">🕐</span>
+                    <span>${venue.hours}</span>
+                  </div>
+                `;
+              })() : ''}
             </div>
           </div>
           <div class="special-toggle">↓</div>

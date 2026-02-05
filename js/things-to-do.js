@@ -2,7 +2,7 @@
 let allActivities = [];
 let filteredActivities = [];
 let selectedCategory = 'all';
-const API_URL = 'http://localhost:3002/api/businesses';
+const API_URL = 'http://localhost:3002/api/gcr/businesses';
 
 // Helper function to remove URLs from text
 function stripUrls(text) {
@@ -26,14 +26,31 @@ async function initializeThingsToDoPage() {
       return;
     }
 
-    // Filter to things-to-do, activities, attractions, nightlife, and entertainment categories
-    allActivities = data.businesses.filter(b =>
-      b.category === 'things-to-do' ||
-      b.category === 'activities' ||
-      b.category === 'attractions' ||
-      b.category === 'nightlife' ||
-      b.category === 'entertainment'
-    );
+    // Filter to ONLY things-to-do, activities, attractions, nightlife, and entertainment
+    // EXCLUDE: restaurants, coffee-sweets, beach-access, parking, hotels, shopping
+    allActivities = data.businesses.filter(b => {
+      const cat = (b.category || '').toLowerCase();
+      const name = (b.name || '').toLowerCase();
+
+      // Exclude restaurants and food places
+      if (cat === 'restaurants' || cat === 'coffee-sweets' || cat === 'food' ||
+          name.includes('restaurant') || name.includes('cafe') || name.includes('coffee')) {
+        return false;
+      }
+
+      // Exclude beach access and parking (those go in "other")
+      if (cat === 'beach-access' || cat === 'parking' || cat === 'boat-launch' ||
+          cat === 'hotels' || cat === 'lodging' || cat === 'shopping' || cat === 'other') {
+        return false;
+      }
+
+      // Include only activities, attractions, entertainment, nightlife
+      return cat === 'things-to-do' ||
+             cat === 'activities' ||
+             cat === 'attractions' ||
+             cat === 'nightlife' ||
+             cat === 'entertainment';
+    });
     filteredActivities = [...allActivities];
 
     console.log(`✅ Loaded ${allActivities.length} things to do (things-to-do: ${data.businesses.filter(b => b.category === 'things-to-do').length}, activities: ${data.businesses.filter(b => b.category === 'activities').length}, attractions: ${data.businesses.filter(b => b.category === 'attractions').length})`);
@@ -129,15 +146,9 @@ function displayActivities() {
                     ${activity.rating ? `<span style="color: #F59E0B; font-size: 14px; font-weight: 600;">⭐ ${activity.rating.toFixed(1)}</span>` : ''}
                   </div>
                 <div class="special-meta">
-                  ${activity.location ? `
-                    <div class="special-meta-item">
-                      <span class="special-meta-icon">📍</span>
-                      <span>${activity.location}</span>
-                    </div>
-                  ` : ''}
                   ${activity.address ? `
                     <div class="special-meta-item">
-                      <span class="special-meta-icon">🗺️</span>
+                      <span class="special-meta-icon">📍</span>
                       <span>${activity.address}</span>
                     </div>
                   ` : ''}
@@ -159,6 +170,17 @@ function displayActivities() {
                       <span>${activity.priceLevel.length > 100 ? activity.priceLevel.substring(0, 100) + '...' : activity.priceLevel}</span>
                     </div>
                   ` : ''}
+                  ${activity.hours && typeof getBusinessStatus === 'function' ? (() => {
+                    const status = getBusinessStatus(activity);
+                    return status.badge ? `
+                      <div class="special-meta-item" style="margin-top: 8px;">
+                        <div class="business-status-badge ${status.class}">
+                          ${status.badge}
+                        </div>
+                        ${status.text ? `<div class="business-status-text" style="font-size: 13px; color: #6B7280; margin-top: 4px;">${status.text}</div>` : ''}
+                      </div>
+                    ` : '';
+                  })() : ''}
                 </div>
                 </div>
                 ${activity.website ? '<div class="special-arrow">→</div>' : ''}

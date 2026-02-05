@@ -345,18 +345,21 @@ function getCurrentMealTime() {
 
 // Get time range display for meal categories
 function getMealTimeRange(category) {
-  const timeRanges = {
-    'Happy Hour': currentBusiness?.happyHour || '3pm - 6pm',
-    'HAPPY HOUR': currentBusiness?.happyHour || '3pm - 6pm',
-    'Brunch': '7am - 11am',
-    'BRUNCH': '7am - 11am',
-    'Lunch': '11am - 4pm',
-    'LUNCH': '11am - 4pm',
-    'Dinner': '4pm - 11pm',
-    'DINNER': '4pm - 11pm',
-    'All': 'All Day'
-  };
-  return timeRanges[category] || '';
+  // Try to get schedule from nested menu structure first
+  if (currentBusiness && currentBusiness.menu && typeof currentBusiness.menu === 'object') {
+    const periodKey = category.toLowerCase().replace(/\s+/g, '');
+    const menuData = currentBusiness.menu[periodKey];
+    if (menuData && menuData.schedule) {
+      return menuData.schedule;
+    }
+  }
+
+  // Fallback to old fields if nested structure doesn't exist
+  if (category.toLowerCase().includes('happy')) {
+    return currentBusiness?.happyHour || '';
+  }
+
+  return '';
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -459,8 +462,34 @@ async function initializeProfile() {
   console.log('Images array:', currentBusiness.images);
   console.log('Fallback image:', currentBusiness.image);
 
+  // Flatten nested menu structure if needed
+  let menuArray = [];
+  if (Array.isArray(currentBusiness.menu)) {
+    // Already flat array
+    menuArray = currentBusiness.menu;
+  } else if (currentBusiness.menu && typeof currentBusiness.menu === 'object') {
+    // Nested structure: { lunch: { sections: {...} }, dinner: {...}, etc. }
+    // Flatten to array with category field
+    Object.keys(currentBusiness.menu).forEach(mealPeriod => {
+      const meal = currentBusiness.menu[mealPeriod];
+      if (meal.sections) {
+        Object.values(meal.sections).forEach(section => {
+          if (section.items) {
+            section.items.forEach(item => {
+              menuArray.push({
+                ...item,
+                category: meal.name || mealPeriod,
+                section: section.name,
+                type: section.name // For food type filtering
+              });
+            });
+          }
+        });
+      }
+    });
+  }
+
   // Filter OUT promotional/special items from menu - they belong in events section
-  const menuArray = currentBusiness.menu || [];
   allMenuItems = menuArray.filter(item => {
     // Exclude items with category "Promotions", "Special Events", "Events", etc.
     const category = (item.category || '').toLowerCase();
@@ -636,20 +665,71 @@ function renderEventsSection() {
 function renderProfileNav() {
   const navLinks = document.getElementById('profile-nav-links');
 
-  // Handle tags as string or array
-  const tags = currentBusiness.tags ?
-    (Array.isArray(currentBusiness.tags) ? currentBusiness.tags : currentBusiness.tags.split(',').map(t => t.trim())) :
-    [];
+  // Detect meal periods from nested menu structure
+  const mealPeriods = [];
+  if (currentBusiness.menu && typeof currentBusiness.menu === 'object' && !Array.isArray(currentBusiness.menu)) {
+    // Nested menu structure - extract meal periods
+    const periodOrder = ['breakfast', 'brunch', 'lunch', 'dinner', 'happyhour', 'drinks', 'kids'];
+    Object.keys(currentBusiness.menu).forEach(key => {
+      const period = key.toLowerCase();
+      if (!mealPeriods.includes(period)) {
+        mealPeriods.push(period);
+      }
+    });
+    // Sort by typical meal order
+    mealPeriods.sort((a, b) => {
+      const indexA = periodOrder.indexOf(a);
+      const indexB = periodOrder.indexOf(b);
+      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }
 
-  navLinks.innerHTML = `
-    ${allMenuItems.length > 0 ? '<button class="cuisine-filter-chip" onclick="location.href=\'#menu\'">Menu</button>' : ''}
-    ${allDrinks.length > 0 ? '<button class="cuisine-filter-chip" onclick="location.href=\'#drinks\'">Drinks</button>' : ''}
-    ${tags.includes('Happy Hour') ? '<button class="cuisine-filter-chip" onclick="location.href=\'#happy-hour\'">Happy Hour</button>' : ''}
-    <button class="cuisine-filter-chip" onclick="location.href='#reviews'">Reviews</button>
+  // Build navigation with meal period buttons
+  let navHTML = '';
+
+  // Add meal period buttons dynamically
+  mealPeriods.forEach(period => {
+    let label = period.charAt(0).toUpperCase() + period.slice(1);
+    let anchor = '#menu'; // Default anchor
+
+    if (period === 'happyhour') {
+      label = 'Happy Hour';
+      anchor = '#happy-hour';
+    } else if (period === 'drinks') {
+      anchor = '#drinks';
+    } else if (period === 'brunch') {
+      anchor = '#menu';
+    } else if (period === 'lunch') {
+      anchor = '#menu';
+    } else if (period === 'dinner') {
+      anchor = '#menu';
+    } else if (period === 'breakfast') {
+      anchor = '#menu';
+    } else if (period === 'kids') {
+      label = 'Kids Menu';
+      anchor = '#menu';
+    }
+
+    navHTML += `<button class="cuisine-filter-chip" onclick="location.href='${anchor}'">${label}</button>`;
+  });
+
+  // Add specials if they exist
+  if (currentBusiness.specials && currentBusiness.specials.length > 0) {
+    navHTML += '<button class="cuisine-filter-chip" onclick="location.href=\'#specials\'">Specials</button>';
+  }
+
+  // Add standard sections
+  navHTML += `
     <button class="cuisine-filter-chip" onclick="location.href='#events'">Events</button>
     <button class="cuisine-filter-chip" onclick="location.href='#photo-gallery-section'">📸 Photo Gallery</button>
+    <button class="cuisine-filter-chip" onclick="location.href='#reviews'">Reviews</button>
     <button class="cuisine-filter-chip" onclick="location.href='#social-feed'">News Feed</button>
   `;
+
+  navLinks.innerHTML = navHTML;
 
   // Single line horizontal scroll navigation - ensure nowrap
   if (navLinks) {
@@ -703,8 +783,17 @@ function renderProfile() {
 
   const drinkCategories = [...new Set(allDrinks.map(drink => drink.category))];
 
-  // Get unique food types (appetizers, seafood, etc.)
-  const foodTypes = [...new Set(allMenuItems.map(item => item.type).filter(Boolean))].sort();
+  // Get unique section names from actual menu data (NOT hardcoded!)
+  const foodSections = [...new Set(allMenuItems.map(item => item.section).filter(Boolean))].sort();
+
+  // Get unique dietary tags from actual menu items (NOT hardcoded!)
+  const allDietaryTags = new Set();
+  allMenuItems.forEach(item => {
+    if (item.dietary && Array.isArray(item.dietary)) {
+      item.dietary.forEach(tag => allDietaryTags.add(tag));
+    }
+  });
+  const dietaryFilters = Array.from(allDietaryTags).sort();
 
   container.innerHTML = `
     <!-- Large Loyalty Promo Button -->
@@ -893,10 +982,21 @@ function renderProfile() {
           </div>
 
           ${(() => {
-            // Check if it's happy hour time
+            // Check if it's happy hour time using actual schedule from data
             const now = new Date();
             const hour = now.getHours();
-            const isHappyHour = (hour >= 15 && hour < 18); // 3pm-6pm
+
+            // Get happy hour times from data
+            let isHappyHour = false;
+            if (currentBusiness.menu && currentBusiness.menu.happyhour) {
+              const hhData = currentBusiness.menu.happyhour;
+              if (hhData.startTime && hhData.endTime) {
+                // Parse times like "16:00" or "4:00 PM"
+                const startHour = parseInt(hhData.startTime.split(':')[0]);
+                const endHour = parseInt(hhData.endTime.split(':')[0]);
+                isHappyHour = (hour >= startHour && hour < endHour);
+              }
+            }
 
             if (isHappyHour && currentBusiness.tags && businessTags.includes('Happy Hour')) {
               return `
@@ -918,19 +1018,16 @@ function renderProfile() {
             </div>
           ` : ''}
 
-          <!-- Food Type & Dietary Filters -->
-          ${foodTypes.length > 0 ? `
+          <!-- Section & Dietary Filters (Dynamic from actual menu data) -->
+          ${(foodSections.length > 0 || dietaryFilters.length > 0) ? `
             <div class="food-type-filters" style="margin: 0; padding: 12px 20px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: thin;">
               <button class="food-type-chip active" data-type="all">All</button>
-              ${foodTypes.map(type => `
-                <button class="food-type-chip" data-type="${type}">${type}</button>
+              ${foodSections.map(section => `
+                <button class="food-type-chip" data-type="${section}">${section}</button>
               `).join('')}
-              <button class="food-type-chip" data-dietary="vegetarian">🌱 Vegetarian</button>
-              <button class="food-type-chip" data-dietary="vegan">🥬 Vegan</button>
-              <button class="food-type-chip" data-dietary="gluten-free">🌾 Gluten Free</button>
-              <button class="food-type-chip" data-dietary="spicy">🌶️ Spicy</button>
-              <button class="food-type-chip" data-dietary="low-calorie">🔥 Low Cal</button>
-              <button class="food-type-chip" data-dietary="seafood">🦐 Seafood</button>
+              ${dietaryFilters.map(dietary => `
+                <button class="food-type-chip" data-dietary="${dietary.toLowerCase().replace(/\s+/g, '-')}">${dietary}</button>
+              `).join('')}
             </div>
           ` : ''}
         </div>
@@ -958,10 +1055,22 @@ function renderProfile() {
     ${currentBusiness.tags && businessTags.includes('Happy Hour') ? `
       <section id="happy-hour" class="profile-section" style="background: var(--bg-elevated);">
         <h2 class="profile-section-title">🍹 Happy Hour</h2>
-        <div class="happy-hour-header">
-          <h3>Happy Hours</h3>
-          <p class="happy-hour-time">${currentBusiness.happyHour || 'Check with restaurant for current happy hour times and specials'}</p>
-        </div>
+        ${(() => {
+          // Get happy hour schedule from nested menu structure
+          let schedule = '';
+          if (currentBusiness.menu && currentBusiness.menu.happyhour && currentBusiness.menu.happyhour.schedule) {
+            schedule = currentBusiness.menu.happyhour.schedule;
+          } else if (currentBusiness.happyHour) {
+            schedule = currentBusiness.happyHour;
+          } else {
+            schedule = 'Check with restaurant for current happy hour times';
+          }
+          return `
+            <div class="happy-hour-header">
+              <p class="happy-hour-time" style="font-size: 16px; font-weight: 600; color: var(--primary); margin-bottom: 20px;">📅 ${schedule}</p>
+            </div>
+          `;
+        })()}
         ${currentBusiness.happyHours && currentBusiness.happyHours.length > 0 ? `
           <div class="happy-hour-specials-grid">
             ${currentBusiness.happyHours.map(special => `
@@ -972,6 +1081,33 @@ function renderProfile() {
             `).join('')}
           </div>
         ` : ''}
+      </section>
+    ` : ''}
+
+    <!-- Specials Section -->
+    ${currentBusiness.specials && currentBusiness.specials.length > 0 ? `
+      <section id="specials" class="profile-section" style="background: var(--bg-elevated);">
+        <h2 class="profile-section-title">🎉 Specials</h2>
+        <div class="menu-items-grid">
+          ${currentBusiness.specials.map((special, index) => `
+            <div class="menu-item-card">
+              ${special.image ? `<img src="${special.image}" alt="${special.name}" class="menu-item-image">` : ''}
+              <div class="menu-item-content">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                  <h3 class="menu-item-name">${special.name}</h3>
+                  ${special.price ? `<span class="menu-item-price">${special.price}</span>` : ''}
+                </div>
+                ${special.description ? `<p class="menu-item-description">${special.description}</p>` : ''}
+                ${special.day || special.time ? `
+                  <div style="display: flex; gap: 12px; margin-top: 12px; font-size: 14px; color: var(--primary); font-weight: 600;">
+                    ${special.day ? `<span>📅 ${special.day}</span>` : ''}
+                    ${special.time ? `<span>🕐 ${special.time}</span>` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
       </section>
     ` : ''}
 
@@ -1529,22 +1665,28 @@ function updateFoodTypeFilters(mealCategory) {
     [...allMenuItems] :
     allMenuItems.filter(item => item.category === mealCategory);
 
-  // Get unique food types from those items
-  const foodTypes = [...new Set(relevantItems.map(item => item.type).filter(Boolean))].sort();
+  // Get unique section names from actual menu data (NOT hardcoded!)
+  const foodSections = [...new Set(relevantItems.map(item => item.section).filter(Boolean))].sort();
 
-  // Rebuild the food type filter buttons (including dietary filters)
-  if (foodTypes.length > 0) {
+  // Get unique dietary tags from actual menu items (NOT hardcoded!)
+  const allDietaryTags = new Set();
+  relevantItems.forEach(item => {
+    if (item.dietary && Array.isArray(item.dietary)) {
+      item.dietary.forEach(tag => allDietaryTags.add(tag));
+    }
+  });
+  const dietaryFilters = Array.from(allDietaryTags).sort();
+
+  // Rebuild the section and dietary filter buttons (dynamic from data!)
+  if (foodSections.length > 0 || dietaryFilters.length > 0) {
     foodTypeContainer.innerHTML = `
-      <button class="food-type-chip active" data-type="all">All Types</button>
-      ${foodTypes.map(type => `
-        <button class="food-type-chip" data-type="${type}">${type}</button>
+      <button class="food-type-chip active" data-type="all">All</button>
+      ${foodSections.map(section => `
+        <button class="food-type-chip" data-type="${section}">${section}</button>
       `).join('')}
-      <button class="food-type-chip" data-dietary="vegetarian">🌱 Vegetarian</button>
-      <button class="food-type-chip" data-dietary="vegan">🥬 Vegan</button>
-      <button class="food-type-chip" data-dietary="gluten-free">🌾 Gluten Free</button>
-      <button class="food-type-chip" data-dietary="spicy">🌶️ Spicy</button>
-      <button class="food-type-chip" data-dietary="low-calorie">🔥 Low Cal</button>
-      <button class="food-type-chip" data-dietary="seafood">🦐 Seafood</button>
+      ${dietaryFilters.map(dietary => `
+        <button class="food-type-chip" data-dietary="${dietary.toLowerCase().replace(/\s+/g, '-')}">${dietary}</button>
+      `).join('')}
     `;
 
     // Re-attach event listeners to new buttons

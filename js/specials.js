@@ -29,6 +29,37 @@ function parseRecurringDays(dayString) {
   return days;
 }
 
+// Helper function to convert military time to regular time
+function formatTime(timeString) {
+  if (!timeString) return '';
+
+  // If it already has AM/PM, return as-is
+  if (/am|pm/i.test(timeString)) return timeString;
+
+  // Match patterns like "16:00", "16:00-18:00", "1600", "1600-1800"
+  const match = timeString.match(/(\d{1,2}):?(\d{2})?/);
+  if (!match) return timeString;
+
+  let hours = parseInt(match[1]);
+  const minutes = match[2] || '00';
+
+  // Convert to 12-hour format
+  const period = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12; // Convert 0 to 12 for midnight, 13-23 to 1-11
+
+  const formattedTime = `${hours}:${minutes} ${period}`;
+
+  // Handle time ranges like "16:00-18:00"
+  if (timeString.includes('-')) {
+    const parts = timeString.split('-');
+    const startTime = formatTime(parts[0].trim());
+    const endTime = formatTime(parts[1].trim());
+    return `${startTime} - ${endTime}`;
+  }
+
+  return formattedTime;
+}
+
 // Generate events for next 7 days
 function generateSpecialsByDay() {
   const dayMap = {};
@@ -232,7 +263,7 @@ function displaySpecialsByDay() {
                   ${event.time ? `
                     <div class="special-meta-item">
                       <span class="special-meta-icon">🕐</span>
-                      <span>${event.time}</span>
+                      <span>${formatTime(event.time)}</span>
                     </div>
                   ` : ''}
                   <div class="special-meta-item">
@@ -385,6 +416,17 @@ function displaySpecials(businesses) {
                   <span>${specials.length} Special${specials.length !== 1 ? 's' : ''}</span>
                 </div>
               ` : ''}
+              ${business.hours && typeof getBusinessStatus === 'function' ? (() => {
+                const status = getBusinessStatus(business);
+                return status.badge ? `
+                  <div class="special-meta-item" style="margin-top: 8px;">
+                    <div class="business-status-badge ${status.class}">
+                      ${status.badge}
+                    </div>
+                    ${status.text ? `<div class="business-status-text" style="font-size: 13px; color: #6B7280; margin-top: 4px;">${status.text}</div>` : ''}
+                  </div>
+                ` : '';
+              })() : ''}
             </div>
           </div>
           <div class="special-toggle">↓</div>
@@ -402,7 +444,7 @@ function displaySpecials(businesses) {
                   ${special.day || special.time ? `
                     <div style="display: flex; gap: 12px; margin-bottom: 8px;">
                       ${special.day ? `<div class="special-detail-category">${special.day}</div>` : ''}
-                      ${special.time ? `<div class="special-detail-category">${special.time}</div>` : ''}
+                      ${special.time ? `<div class="special-detail-category">${formatTime(special.time)}</div>` : ''}
                     </div>
                   ` : ''}
                   <p class="special-detail-description">${special.description}</p>

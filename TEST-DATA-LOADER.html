@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>✅ TEST DATA LOADER</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+    h1 { color: #0ff; font-size: 28px; }
+    .pass { color: #0f0; font-weight: bold; font-size: 20px; }
+    .fail { color: #f00; font-weight: bold; font-size: 20px; }
+    .section { margin: 20px 0; padding: 20px; background: #111; border: 2px solid #333; }
+    pre { background: #000; padding: 10px; overflow-x: auto; font-size: 12px; }
+    .loading { color: #ff0; }
+  </style>
+</head>
+<body>
+  <h1>🧪 DATA LOADER TEST</h1>
+
+  <div class="section">
+    <h2>1. Data Loader Status</h2>
+    <div id="loader-status" class="loading">⏳ Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>2. Business Count</h2>
+    <div id="business-count" class="loading">⏳ Waiting for data...</div>
+  </div>
+
+  <div class="section">
+    <h2>3. Sample Business (Cobalt)</h2>
+    <div id="cobalt-data" class="loading">⏳ Searching...</div>
+  </div>
+
+  <div class="section">
+    <h2>4. Data Structure Test</h2>
+    <div id="structure-test" class="loading">⏳ Testing...</div>
+  </div>
+
+  <!-- Load fallback data first -->
+  <script src="js/fallback-data.js"></script>
+
+  <!-- Load data-loader which will fetch from Supabase -->
+  <script src="js/data-loader.js"></script>
+
+  <script>
+    // Wait for data to load
+    window.addEventListener('businessDataLoaded', function(event) {
+      const { source, count } = event.detail;
+
+      // 1. Loader Status
+      document.getElementById('loader-status').innerHTML = `
+        <div class="pass">✅ Data loaded from: ${source}</div>
+        <div>Businesses loaded: ${count}</div>
+      `;
+
+      // 2. Business Count
+      const expectedCount = 946;
+      const countResult = document.getElementById('business-count');
+
+      if (count === expectedCount) {
+        countResult.innerHTML = `<div class="pass">✅ PERFECT! ${count} businesses loaded (expected ${expectedCount})</div>`;
+      } else {
+        countResult.innerHTML = `<div class="fail">⚠️ Got ${count} businesses, expected ${expectedCount}</div>`;
+      }
+
+      // 3. Find Cobalt
+      const businesses = window.gcrDataLoader.getAllBusinesses();
+      const cobalt = businesses.find(b => b.name.toLowerCase().includes('cobalt'));
+
+      if (cobalt) {
+        document.getElementById('cobalt-data').innerHTML = `
+          <div class="pass">✅ Found Cobalt!</div>
+          <pre>Name: ${cobalt.name}
+Category: ${cobalt.category}
+Has happy_hour: ${!!cobalt.happy_hour}
+Happy hour items: ${cobalt.happy_hour?.items?.length || 0}
+Menu items: ${cobalt.menu?.length || 0}
+Drinks: ${cobalt.drinks?.length || 0}
+Specials: ${cobalt.specials?.length || 0}
+Events: ${cobalt.events?.length || 0}
+
+Happy Hour Items:
+${(cobalt.happy_hour?.items || []).map((item, i) => `  ${i+1}. ${item.name} - ${item.happy_hour_price}`).join('\n')}
+
+Events:
+${(cobalt.events || []).map((e, i) => `  ${i+1}. ${e.name}`).join('\n')}
+          </pre>
+        `;
+      } else {
+        document.getElementById('cobalt-data').innerHTML = `<div class="fail">❌ Cobalt not found!</div>`;
+      }
+
+      // 4. Structure Test
+      const restaurantsWithHappyHour = businesses.filter(b =>
+        b.category === 'restaurants' && b.happy_hour && b.happy_hour.items && b.happy_hour.items.length > 0
+      ).length;
+
+      const restaurantsWithMenu = businesses.filter(b =>
+        b.category === 'restaurants' && b.menu && b.menu.length > 0
+      ).length;
+
+      document.getElementById('structure-test').innerHTML = `
+        <div class="pass">✅ Data Structure Analysis:</div>
+        <pre>
+Total businesses: ${count}
+Restaurants: ${businesses.filter(b => b.category === 'restaurants').length}
+With happy_hour.items[]: ${restaurantsWithHappyHour}
+With menu[]: ${restaurantsWithMenu}
+
+Categories: ${[...new Set(businesses.map(b => b.category))].join(', ')}
+        </pre>
+      `;
+    });
+
+    // Timeout handler if data doesn't load
+    setTimeout(() => {
+      if (!window.allBusinesses || window.allBusinesses.length === 0) {
+        document.getElementById('loader-status').innerHTML = `
+          <div class="fail">❌ Data failed to load after 10 seconds</div>
+          <p>Check that backend server is running on port 3002</p>
+        `;
+      }
+    }, 10000);
+  </script>
+</body>
+</html>

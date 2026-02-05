@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Find Your Data</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+    h2 { color: #0ff; }
+    .section { background: #111; padding: 20px; margin: 20px 0; border: 2px solid #333; }
+    pre { background: #000; padding: 10px; overflow-x: auto; }
+    .pass { color: #0f0; }
+    .fail { color: #f00; }
+  </style>
+</head>
+<body>
+  <h1>🔍 FIND YOUR DATA</h1>
+
+  <div class="section" id="localStorage-data">
+    <h2>1. localStorage Data</h2>
+    <div id="localStorage-result"></div>
+  </div>
+
+  <div class="section" id="supabase-data">
+    <h2>2. Supabase API Data</h2>
+    <div id="supabase-result"></div>
+  </div>
+
+  <script>
+    // Check localStorage
+    const stored = localStorage.getItem('gcr_business_data');
+    const localDiv = document.getElementById('localStorage-result');
+
+    if (stored) {
+      try {
+        const businesses = JSON.parse(stored);
+        localDiv.innerHTML = `
+          <div class="pass">✅ FOUND ${businesses.length} businesses in localStorage</div>
+          <pre>Sample businesses:\n${businesses.slice(0, 5).map(b => `- ${b.name || b.business_name}`).join('\n')}</pre>
+        `;
+      } catch (e) {
+        localDiv.innerHTML = `<div class="fail">❌ localStorage exists but can't parse: ${e.message}</div>`;
+      }
+    } else {
+      localDiv.innerHTML = `<div class="fail">❌ No data in localStorage</div>`;
+    }
+
+    // Check Supabase API
+    fetch('http://localhost:3002/api/gcr/businesses')
+      .then(r => r.json())
+      .then(data => {
+        const businesses = data.businesses || [];
+        document.getElementById('supabase-result').innerHTML = `
+          <div class="pass">✅ FOUND ${businesses.length} businesses in Supabase</div>
+          <pre>Sample businesses:\n${businesses.slice(0, 5).map(b => `- ${b.name}`).join('\n')}</pre>
+        `;
+      })
+      .catch(err => {
+        document.getElementById('supabase-result').innerHTML = `
+          <div class="fail">❌ Can't connect to Supabase API: ${err.message}</div>
+        `;
+      });
+  </script>
+</body>
+</html>

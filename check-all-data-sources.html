@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check ALL Data Sources</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+    h2 { color: #0ff; }
+    pre { background: #111; padding: 10px; overflow-x: auto; border: 1px solid #333; }
+    .pass { color: #0f0; }
+    .fail { color: #f00; }
+    button { background: #0f0; color: #000; padding: 10px 20px; margin: 10px 5px; font-weight: bold; cursor: pointer; border: none; }
+  </style>
+</head>
+<body>
+  <h1>🔍 CHECK ALL DATA SOURCES</h1>
+
+  <button onclick="checkLocalStorage()">1. Check localStorage</button>
+  <button onclick="checkSupabase()">2. Check Supabase (1000 businesses)</button>
+  <button onclick="checkBothDates()">3. Compare Dates</button>
+
+  <div id="localStorage-result"></div>
+  <div id="supabase-result"></div>
+  <div id="comparison-result"></div>
+
+  <script>
+    function checkLocalStorage() {
+      const div = document.getElementById('localStorage-result');
+      const stored = localStorage.getItem('gcr_business_data');
+
+      if (stored) {
+        try {
+          const businesses = JSON.parse(stored);
+          div.innerHTML = `
+            <h2>localStorage Data:</h2>
+            <div class="pass">✅ ${businesses.length} businesses</div>
+            <pre>First 10:
+${businesses.slice(0, 10).map((b,i) => `${i+1}. ${b.name || b.business_name}`).join('\n')}</pre>
+          `;
+        } catch (e) {
+          div.innerHTML = `<div class="fail">❌ Error: ${e.message}</div>`;
+        }
+      } else {
+        div.innerHTML = `<div class="fail">❌ NO DATA in localStorage</div>`;
+      }
+    }
+
+    async function checkSupabase() {
+      const div = document.getElementById('supabase-result');
+      try {
+        const response = await fetch('http://localhost:3002/api/gcr/businesses');
+        const data = await response.json();
+        const businesses = data.businesses || [];
+
+        div.innerHTML = `
+          <h2>Supabase Data (OLD SHIT?):</h2>
+          <div class="fail">❌ ${businesses.length} businesses (might be old)</div>
+          <pre>First 10:
+${businesses.slice(0, 10).map((b,i) => `${i+1}. ${b.name} (created: ${b.created_at})`).join('\n')}</pre>
+        `;
+      } catch (e) {
+        div.innerHTML = `<div class="fail">❌ Error: ${e.message}</div>`;
+      }
+    }
+
+    async function checkBothDates() {
+      const div = document.getElementById('comparison-result');
+
+      // Get localStorage
+      const stored = localStorage.getItem('gcr_business_data');
+      const localBusinesses = stored ? JSON.parse(stored) : [];
+
+      // Get Supabase
+      const response = await fetch('http://localhost:3002/api/gcr/businesses');
+      const data = await response.json();
+      const supabaseBusinesses = data.businesses || [];
+
+      // Check dates
+      const supabaseWithDates = supabaseBusinesses.filter(b => b.created_at);
+      const recentSupabase = supabaseWithDates.filter(b => {
+        const date = new Date(b.created_at);
+        const febStart = new Date('2026-02-01');
+        return date >= febStart;
+      });
+
+      const oldSupabase = supabaseWithDates.filter(b => {
+        const date = new Date(b.created_at);
+        const febStart = new Date('2026-02-01');
+        return date < febStart;
+      });
+
+      div.innerHTML = `
+        <h2>Date Analysis:</h2>
+        <div>localStorage: ${localBusinesses.length} businesses</div>
+        <div class="fail">Supabase OLD (before Feb 2026): ${oldSupabase.length} businesses</div>
+        <div class="pass">Supabase NEW (Feb 2026+): ${recentSupabase.length} businesses</div>
+
+        <h3>NEW Supabase businesses (Feb 2026+):</h3>
+        <pre>${recentSupabase.slice(0, 20).map(b => `${b.name} (${b.created_at})`).join('\n')}</pre>
+      `;
+    }
+
+    // Auto-run checks
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        checkLocalStorage();
+        checkSupabase();
+        checkBothDates();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

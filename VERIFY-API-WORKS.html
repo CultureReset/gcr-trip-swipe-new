@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>✅ VERIFY API WORKS</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+    h1 { color: #0ff; font-size: 32px; }
+    .pass { color: #0f0; font-weight: bold; font-size: 24px; }
+    .fail { color: #f00; font-weight: bold; font-size: 24px; }
+    pre { background: #111; padding: 15px; overflow-x: auto; border: 2px solid #333; }
+    .section { margin: 30px 0; padding: 20px; background: #111; border: 2px solid #333; }
+  </style>
+</head>
+<body>
+  <h1>🔧 API VERIFICATION TEST</h1>
+
+  <div class="section">
+    <h2>Testing: http://localhost:3002/api/gcr/businesses</h2>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function testAPI() {
+      const resultDiv = document.getElementById('result');
+
+      try {
+        resultDiv.innerHTML = '<p>⏳ Fetching from API...</p>';
+
+        const response = await fetch('http://localhost:3002/api/gcr/businesses');
+        const data = await response.json();
+
+        if (data.success && data.count === 946) {
+          resultDiv.innerHTML = `
+            <div class="pass">✅ SUCCESS! API IS WORKING!</div>
+            <h3>Response Details:</h3>
+            <pre>
+Success: ${data.success}
+Count: ${data.count} businesses
+First Business: ${data.businesses[0].name}
+Category: ${data.businesses[0].category}
+Location: ${data.businesses[0].address}
+            </pre>
+
+            <h3>First 10 Businesses:</h3>
+            <pre>${data.businesses.slice(0, 10).map((b, i) =>
+              `${i+1}. ${b.name} (${b.category})`
+            ).join('\n')}</pre>
+
+            <h3>✅ YOUR 946 BUSINESSES ARE LOADING FROM SUPABASE!</h3>
+            <p style="color: #0f0; font-size: 18px;">The admin dashboard should now work correctly.</p>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="fail">❌ UNEXPECTED RESPONSE</div>
+            <pre>${JSON.stringify(data, null, 2).slice(0, 1000)}</pre>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="fail">❌ ERROR: ${error.message}</div>
+          <p>Make sure backend server is running on port 3002</p>
+        `;
+      }
+    }
+
+    // Auto-run on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(testAPI, 500);
+    });
+  </script>
+</body>
+</html>

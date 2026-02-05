@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>✅ Test Cobalt Data Display</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #000; color: #0f0; }
+    h1 { color: #0ff; }
+    h2 { color: #ff0; margin-top: 30px; }
+    .pass { color: #0f0; font-weight: bold; font-size: 18px; }
+    .fail { color: #f00; font-weight: bold; font-size: 18px; }
+    .section { background: #111; padding: 20px; margin: 20px 0; border: 2px solid #333; border-radius: 8px; }
+    .item { background: #222; padding: 10px; margin: 10px 0; border-left: 3px solid #0f0; }
+    pre { background: #000; padding: 10px; overflow-x: auto; font-size: 12px; }
+    .loading { color: #ff0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #333; }
+    th { background: #222; color: #0ff; }
+  </style>
+</head>
+<body>
+  <h1>🧪 COBALT DATA DISPLAY TEST</h1>
+  <p>Testing that all Cobalt data loads and displays correctly from Supabase</p>
+
+  <div id="status" class="loading">⏳ Loading data from Supabase API...</div>
+
+  <div id="results" style="display: none;">
+    <div class="section">
+      <h2>1. Basic Info</h2>
+      <div id="basic-info"></div>
+    </div>
+
+    <div class="section">
+      <h2>2. Happy Hour Items (should show 8 items)</h2>
+      <div id="happy-hour"></div>
+    </div>
+
+    <div class="section">
+      <h2>3. Menu Items (should show 4 items)</h2>
+      <div id="menu"></div>
+    </div>
+
+    <div class="section">
+      <h2>4. Drinks (should show 2 items)</h2>
+      <div id="drinks"></div>
+    </div>
+
+    <div class="section">
+      <h2>5. Events (should show Sunset Menu)</h2>
+      <div id="events"></div>
+    </div>
+
+    <div class="section">
+      <h2>6. Specials (currently 0)</h2>
+      <div id="specials"></div>
+    </div>
+  </div>
+
+  <script>
+    async function testCobaltDisplay() {
+      try {
+        // Fetch from Supabase API
+        const response = await fetch('http://localhost:3002/api/gcr/businesses');
+        const data = await response.json();
+
+        if (!data.success || !data.businesses) {
+          throw new Error('Invalid API response');
+        }
+
+        // Find Cobalt
+        const cobalt = data.businesses.find(b => b.name.toLowerCase().includes('cobalt'));
+
+        if (!cobalt) {
+          document.getElementById('status').innerHTML = '<div class="fail">❌ Cobalt not found in data!</div>';
+          return;
+        }
+
+        // Show success
+        document.getElementById('status').innerHTML = '<div class="pass">✅ Data loaded successfully! Found Cobalt with all data.</div>';
+        document.getElementById('results').style.display = 'block';
+
+        // 1. Basic Info
+        document.getElementById('basic-info').innerHTML = `
+          <table>
+            <tr><th>Field</th><th>Value</th></tr>
+            <tr><td>Name</td><td>${cobalt.name}</td></tr>
+            <tr><td>Category</td><td>${cobalt.category}</td></tr>
+            <tr><td>Address</td><td>${cobalt.address}</td></tr>
+            <tr><td>Phone</td><td>${cobalt.phone}</td></tr>
+            <tr><td>Website</td><td><a href="${cobalt.website}" target="_blank">${cobalt.website}</a></td></tr>
+            <tr><td>Rating</td><td>${cobalt.rating} ⭐ (${cobalt.user_ratings_total} reviews)</td></tr>
+            <tr><td>Price Level</td><td>${cobalt.price_level_text || 'N/A'}</td></tr>
+          </table>
+        `;
+
+        // 2. Happy Hour (nested in menu.happyhour)
+        const happyHourMenu = cobalt.menu?.happyhour || {};
+        const happyHourItems = [];
+
+        // Extract items from all sections in happyhour
+        if (happyHourMenu.sections) {
+          Object.values(happyHourMenu.sections).forEach(section => {
+            if (section.items) happyHourItems.push(...section.items);
+          });
+        }
+
+        if (happyHourItems.length > 0) {
+          const schedule = happyHourMenu.schedule || 'No schedule';
+          document.getElementById('happy-hour').innerHTML = `
+            <div class="pass">✅ ${happyHourItems.length} happy hour items found</div>
+            <p style="color: #0ff; font-weight: bold; font-size: 16px;">📅 ${schedule}</p>
+            ${happyHourItems.map(item => `
+              <div class="item">
+                <strong>${item.name}</strong> - ${item.price}<br>
+                ${item.description || ''}
+              </div>
+            `).join('')}
+          `;
+        } else {
+          document.getElementById('happy-hour').innerHTML = '<div class="fail">❌ No happy hour items</div>';
+        }
+
+        // 3. Menu (nested structure: menu.lunch.sections.appetizers.items[])
+        const allMenuItems = [];
+        const menuObj = cobalt.menu || {};
+        let menuDetails = '';
+
+        // Extract all items from all meal periods and sections
+        Object.keys(menuObj).forEach(mealPeriod => {
+          const meal = menuObj[mealPeriod];
+
+          // Add schedule/age info for special meal periods
+          if (meal.schedule) {
+            menuDetails += `<p style="color: #0ff;">📅 ${meal.name}: ${meal.schedule}</p>`;
+          }
+          if (meal.ageRestriction) {
+            menuDetails += `<p style="color: #ff0;">👶 ${meal.name}: ${meal.ageRestriction}</p>`;
+          }
+
+          if (meal.sections) {
+            Object.values(meal.sections).forEach(section => {
+              if (section.items) {
+                section.items.forEach(item => {
+                  allMenuItems.push({
+                    ...item,
+                    mealPeriod: meal.name,
+                    section: section.name
+                  });
+                });
+              }
+            });
+          }
+        });
+
+        if (allMenuItems.length > 0) {
+          document.getElementById('menu').innerHTML = `
+            <div class="pass">✅ ${allMenuItems.length} menu items found across ${Object.keys(menuObj).length} meal periods</div>
+            ${menuDetails}
+            ${allMenuItems.slice(0, 10).map(item => `
+              <div class="item">
+                <strong>${item.name}</strong> - ${item.price}<br>
+                ${item.description || ''}<br>
+                <em>${item.mealPeriod} → ${item.section}</em>
+              </div>
+            `).join('')}
+            ${allMenuItems.length > 10 ? `<p style="color: #ff0;">... and ${allMenuItems.length - 10} more items</p>` : ''}
+          `;
+        } else {
+          document.getElementById('menu').innerHTML = '<div class="fail">❌ No menu items</div>';
+        }
+
+        // 4. Drinks (nested in menu.drinks)
+        const drinksMenu = cobalt.menu?.drinks || {};
+        const drinkItems = [];
+
+        if (drinksMenu.sections) {
+          Object.values(drinksMenu.sections).forEach(section => {
+            if (section.items) drinkItems.push(...section.items);
+          });
+        }
+
+        if (drinkItems.length > 0) {
+          document.getElementById('drinks').innerHTML = `
+            <div class="pass">✅ ${drinkItems.length} drink items found</div>
+            ${drinkItems.map(drink => `
+              <div class="item">
+                <strong>${drink.name}</strong> - ${drink.price}<br>
+                ${drink.description || ''}
+              </div>
+            `).join('')}
+          `;
+        } else {
+          document.getElementById('drinks').innerHTML = '<div class="fail">❌ No drinks</div>';
+        }
+
+        // 5. Events
+        const events = cobalt.events || [];
+        if (events.length > 0) {
+          document.getElementById('events').innerHTML = `
+            <div class="pass">✅ ${events.length} event(s) found</div>
+            ${events.map(event => `
+              <div class="item">
+                <strong>${event.name}</strong><br>
+                ${event.description || 'No description'}
+              </div>
+            `).join('')}
+          `;
+        } else {
+          document.getElementById('events').innerHTML = '<div class="fail">❌ No events</div>';
+        }
+
+        // 6. Specials
+        const specials = cobalt.specials || [];
+        if (specials.length > 0) {
+          document.getElementById('specials').innerHTML = `
+            <div class="pass">✅ ${specials.length} special(s) found</div>
+            ${specials.map(special => `
+              <div class="item">
+                <strong>${special.name}</strong> - <span style="color: #0f0; font-weight: bold;">${special.price}</span><br>
+                ${special.description}<br>
+                <em style="color: #0ff;">📅 ${special.day} ${special.time}</em>
+              </div>
+            `).join('')}
+          `;
+        } else {
+          document.getElementById('specials').innerHTML = `
+            <div style="color: #ff0;">⚠️ No specials (this is expected - Sunset Menu is in events[])</div>
+            <p style="color: #aaa;">Note: If you want Sunset Menu to show on specials page, it needs to be in the specials[] array, not events[]</p>
+          `;
+        }
+
+      } catch (error) {
+        document.getElementById('status').innerHTML = `<div class="fail">❌ Error: ${error.message}</div>`;
+        console.error(error);
+      }
+    }
+
+    // Run test on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(testCobaltDisplay, 500);
+    });
+  </script>
+</body>
+</html>

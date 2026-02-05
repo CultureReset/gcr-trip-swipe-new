@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Show localStorage Data</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #000; color: #0f0; }
+    h1 { color: #0ff; }
+    pre { background: #111; padding: 15px; overflow-x: auto; border: 2px solid #333; }
+    .pass { color: #0f0; font-weight: bold; font-size: 24px; }
+    .fail { color: #f00; font-weight: bold; font-size: 24px; }
+    button { background: #0f0; color: #000; padding: 15px 30px; font-weight: bold; cursor: pointer; border: none; margin: 10px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 SHOW LOCALSTORAGE DATA</h1>
+
+  <button onclick="showData()">Show Data</button>
+  <button onclick="downloadData()">Download as JSON</button>
+
+  <div id="result"></div>
+
+  <script>
+    function showData() {
+      const stored = localStorage.getItem('gcr_business_data');
+      const div = document.getElementById('result');
+
+      if (!stored) {
+        div.innerHTML = '<div class="fail">❌ NO DATA IN LOCALSTORAGE</div><p>Your data might have been overwritten.</p>';
+        return;
+      }
+
+      try {
+        const businesses = JSON.parse(stored);
+        div.innerHTML = `
+          <div class="pass">✅ FOUND ${businesses.length} BUSINESSES IN LOCALSTORAGE!</div>
+
+          <h2>First 20 businesses:</h2>
+          <pre>${businesses.slice(0, 20).map((b, i) => `${i+1}. ${b.name || b.business_name} (${b.category})`).join('\n')}</pre>
+
+          <h2>Categories:</h2>
+          <pre>${[...new Set(businesses.map(b => b.category))].join(', ')}</pre>
+
+          <h2>Full data (first business):</h2>
+          <pre>${JSON.stringify(businesses[0], null, 2).slice(0, 1000)}...</pre>
+        `;
+      } catch (e) {
+        div.innerHTML = `<div class="fail">❌ ERROR: ${e.message}</div>`;
+      }
+    }
+
+    function downloadData() {
+      const stored = localStorage.getItem('gcr_business_data');
+      if (!stored) {
+        alert('No data to download');
+        return;
+      }
+
+      const blob = new Blob([stored], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'localStorage-backup.json';
+      a.click();
+    }
+
+    // Auto-run
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(showData, 500);
+    });
+  </script>
+</body>
+</html>

@@ -187,7 +187,8 @@ function generateHappyHoursByDay() {
               price: priceDisplay || special.price || '',
               location: business.address || business.vicinity || business.location,
               phone: business.phone,
-              address: business.address
+              address: business.address,
+              hours: business.hours
             });
           }
         });
@@ -225,7 +226,8 @@ function generateHappyHoursByDay() {
             price: '',
             location: business.location,
             phone: business.phone,
-            address: business.address
+            address: business.address,
+            hours: business.hours
           });
         }
       });
@@ -240,6 +242,17 @@ function initializeHappyHourPage() {
 
   // Get ONLY businesses with happy hours
   allHappyHourBusinesses = allBusinesses.filter(b => {
+    // Exclude theaters/cinemas (they belong on things-to-do page)
+    const name = (b.name || '').toLowerCase();
+    const category = (b.category || '').toLowerCase();
+    const subcategory = (b.subcategory || '').toLowerCase();
+
+    if (name.includes('amc') || name.includes('cinema') || name.includes('theater') ||
+        category.includes('theater') || category.includes('cinema') || category.includes('movie') ||
+        subcategory.includes('theater') || subcategory.includes('cinema')) {
+      return false;
+    }
+
     // Check old formats
     if (b.happyHourSpecials || b.happy_hour || b.happyHour || b.has_happy_hour || (b.happyHours && b.happyHours.length > 0)) {
       return true;
@@ -292,6 +305,7 @@ function displayHappyHoursByDay() {
           phone: event.phone,
           address: event.address,
           time: event.time,
+          hours: event.hours,
           specials: []
         };
       }
@@ -339,6 +353,17 @@ function displayHappyHoursByDay() {
                   <span class="special-meta-icon">🎯</span>
                   <span>${business.specials.length} Deal${business.specials.length !== 1 ? 's' : ''}</span>
                 </div>
+                ${business.hours && typeof getBusinessStatus === 'function' ? (() => {
+                  const status = getBusinessStatus(business);
+                  return status.badge ? `
+                    <div class="special-meta-item" style="margin-top: 8px;">
+                      <div class="business-status-badge ${status.class}">
+                        ${status.badge}
+                      </div>
+                      ${status.text ? `<div class="business-status-text" style="font-size: 13px; color: #6B7280; margin-top: 4px;">${status.text}</div>` : ''}
+                    </div>
+                  ` : '';
+                })() : ''}
               </div>
             </div>
           </div>

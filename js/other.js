@@ -14,9 +14,9 @@ function stripUrls(text) {
     .trim();
 }
 
-// Define categories to INCLUDE in "Other" - Shopping, Hotels, Services, etc.
+// Define categories to INCLUDE in "Other" - Shopping, Hotels, Services, Beach Access, Parking, etc.
 const otherCategories = [
-  'other', 'shopping', 'hotels', 'lodging', 'boat-launch', 'parking'
+  'other', 'shopping', 'hotels', 'lodging', 'boat-launch', 'parking', 'beach-access', 'beach access'
 ];
 
 async function initializeOtherPage() {

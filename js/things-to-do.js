@@ -26,12 +26,13 @@ async function initializeThingsToDoPage() {
       return;
     }
 
-    // Filter to things-to-do, activities, attractions, and nightlife categories
+    // Filter to things-to-do, activities, attractions, nightlife, and entertainment categories
     allActivities = data.businesses.filter(b =>
       b.category === 'things-to-do' ||
       b.category === 'activities' ||
       b.category === 'attractions' ||
-      b.category === 'nightlife'
+      b.category === 'nightlife' ||
+      b.category === 'entertainment'
     );
     filteredActivities = [...allActivities];
 

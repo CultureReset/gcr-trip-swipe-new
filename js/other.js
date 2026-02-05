@@ -16,7 +16,7 @@ function stripUrls(text) {
 
 // Define categories to INCLUDE in "Other" - Shopping, Hotels, Services, etc.
 const otherCategories = [
-  'other', 'shopping', 'hotels', 'lodging', 'boat-launch', 'entertainment', 'parking'
+  'other', 'shopping', 'hotels', 'lodging', 'boat-launch', 'parking'
 ];
 
 async function initializeOtherPage() {

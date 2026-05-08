@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberCheck - Sign Up</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f9f9f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { width: 100%; max-width: 400px; padding: 20px; }
+    .card { background: white; border-radius: 8px; padding: 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .subtitle { color: #666; margin-bottom: 30px; font-size: 14px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    input:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+    button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 20px; }
+    button:hover { background: #0056b3; }
+    .footer { text-align: center; margin-top: 20px; font-size: 14px; }
+    .footer a { color: #007bff; text-decoration: none; }
+    .error { color: #d32f2f; font-size: 13px; margin-top: 8px; display: none; }
+    .loading { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Create Account</h1>
+      <p class="subtitle">Start building your business</p>
+      <form id="signupForm">
+        <div class="form-group">
+          <label>Business Name</label>
+          <input type="text" id="businessName" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" required>
+        </div>
+        <div class="error" id="error"></div>
+        <button type="submit">Sign Up</button>
+        <div class="loading" id="loading">Creating account...</div>
+      </form>
+      <div class="footer">
+        Already have an account? <a href="saas-login.html">Login</a>
+      </div>
+    </div>
+  </div>
+  <script src="js/saas-auth.js"></script>
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saasSignup(document.getElementById('businessName').value, document.getElementById('email').value, document.getElementById('password').value);
+    });
+  </script>
+</body>
+</html>

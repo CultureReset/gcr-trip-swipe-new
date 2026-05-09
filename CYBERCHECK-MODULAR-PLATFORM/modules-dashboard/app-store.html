@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Store — CyberCheck</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  /* ── Header ── */
+  .store-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #1e293b;
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .store-header h1 { font-size: 1.25rem; font-weight: 700; color: #f8fafc; }
+  .store-header h1 span { color: #38bdf8; }
+  .header-sub { font-size: 0.82rem; color: #64748b; margin-top: 2px; }
+  .installed-count { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 6px 14px; font-size: 0.82rem; color: #94a3b8; }
+  .installed-count strong { color: #38bdf8; }
+
+  /* ── Layout ── */
+  .store-layout { display: flex; min-height: calc(100vh - 73px); }
+  .store-sidebar {
+    width: 220px;
+    background: #0f172a;
+    border-right: 1px solid #1e293b;
+    padding: 20px 0;
+    position: sticky;
+    top: 73px;
+    height: calc(100vh - 73px);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .sidebar-section { padding: 0 16px; margin-bottom: 8px; }
+  .sidebar-label { font-size: 0.7rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; padding: 0 4px; }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #94a3b8;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .sidebar-item:hover { background: #1e293b; color: #e2e8f0; }
+  .sidebar-item.active { background: #1e3a5f; color: #38bdf8; font-weight: 600; }
+  .sidebar-item .cat-icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-item .cat-count { margin-left: auto; background: #1e293b; border-radius: 10px; padding: 1px 7px; font-size: 0.72rem; color: #64748b; }
+  .sidebar-item.active .cat-count { background: rgba(56,189,248,0.15); color: #38bdf8; }
+
+  /* ── Main ── */
+  .store-main { flex: 1; padding: 28px 32px; overflow-y: auto; }
+
+  /* ── Search ── */
+  .search-wrap { margin-bottom: 28px; }
+  .search-box {
+    width: 100%;
+    max-width: 460px;
+    padding: 11px 16px 11px 40px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    position: relative;
+  }
+  .search-box::placeholder { color: #475569; }
+  .search-box:focus { outline: none; border-color: #38bdf8; }
+  .search-wrap-inner { position: relative; display: inline-block; width: 100%; max-width: 460px; }
+  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #475569; font-size: 0.95rem; }
+
+  /* ── Section ── */
+  .store-section { margin-bottom: 40px; }
+  .section-title { font-size: 1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .section-title span { font-size: 0.75rem; color: #475569; font-weight: 500; }
+
+  /* ── Module Grid ── */
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+  .module-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative;
+  }
+  .module-card:hover { border-color: #475569; transform: translateY(-1px); }
+  .module-card.installed { border-color: #1d4ed8; background: #1e2d4a; }
+  .module-card.core { border-color: #1e3a5f; opacity: 0.75; }
+
+  .card-top { display: flex; align-items: flex-start; gap: 12px; }
+  .module-icon { font-size: 1.8rem; width: 44px; height: 44px; background: #0f172a; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .module-info { flex: 1; min-width: 0; }
+  .module-name { font-size: 0.95rem; font-weight: 700; color: #f1f5f9; }
+  .module-category { font-size: 0.72rem; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  .module-desc { font-size: 0.82rem; color: #94a3b8; line-height: 1.5; }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 8px; border-top: 1px solid #334155; }
+  .module-price { font-size: 0.82rem; color: #64748b; }
+  .module-price.free { color: #22c55e; font-weight: 600; }
+  .module-price.paid { color: #f59e0b; font-weight: 600; }
+
+  .btn-install {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-install.install { background: #2563eb; color: #fff; }
+  .btn-install.install:hover { background: #1d4ed8; }
+  .btn-install.installed-btn { background: transparent; border: 1px solid #334155; color: #64748b; }
+  .btn-install.uninstall { background: transparent; border: 1px solid #ef444460; color: #ef4444; }
+  .btn-install.uninstall:hover { background: #ef444415; }
+  .btn-install.core-btn { background: transparent; border: 1px solid #1e3a5f; color: #1d4ed8; cursor: default; }
+  .btn-install:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .installed-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #1d4ed820;
+    border: 1px solid #1d4ed8;
+    color: #60a5fa;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .core-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #1e3a5f20;
+    border: 1px solid #1e3a5f;
+    color: #38bdf8;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 0.68px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Empty state ── */
+  .empty-state { text-align: center; padding: 60px 20px; color: #475569; }
+  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.88rem;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 9999;
+    max-width: 360px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: #22c55e50; }
+  .toast.success .toast-icon { color: #22c55e; }
+  .toast.error { border-color: #ef444450; }
+  .toast.error .toast-icon { color: #ef4444; }
+  .toast-icon { font-size: 1.2rem; }
+
+  /* ── Config Modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 28px; width: 100%; max-width: 480px; }
+  .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .modal .modal-sub { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-modal { flex: 1; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none; }
+  .btn-modal.primary { background: #2563eb; color: #fff; }
+  .btn-modal.cancel { background: #334155; color: #94a3b8; }
+
+  /* ── Loading ── */
+  .grid-loading { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .skeleton { background: #1e293b; border-radius: 14px; height: 150px; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  @media (max-width: 768px) {
+    .store-sidebar { display: none; }
+    .store-main { padding: 20px 16px; }
+    .store-header { padding: 16px; }
+    .module-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="store-header">
+  <div>
+    <h1>CyberCheck <span>App Store</span></h1>
+    <div class="header-sub">Customize your dashboard — install only what you need</div>
+  </div>
+  <div class="installed-count"><strong id="installed-num">0</strong> apps installed</div>
+</div>
+
+<div class="store-layout">
+  <!-- Sidebar -->
+  <aside class="store-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Browse</div>
+      <div class="sidebar-item active" data-cat="all" onclick="setCategory('all', this)">
+        <span class="cat-icon">⚡</span> All Apps <span class="cat-count" id="count-all">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="installed" onclick="setCategory('installed', this)">
+        <span class="cat-icon">✅</span> Installed <span class="cat-count" id="count-installed">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section" style="margin-top:8px">
+      <div class="sidebar-label">Categories</div>
+      <div class="sidebar-item" data-cat="booking" onclick="setCategory('booking', this)">
+        <span class="cat-icon">📅</span> Booking <span class="cat-count" id="count-booking">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="content" onclick="setCategory('content', this)">
+        <span class="cat-icon">📄</span> Content <span class="cat-count" id="count-content">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="commerce" onclick="setCategory('commerce', this)">
+        <span class="cat-icon">🛒</span> Commerce <span class="cat-count" id="count-commerce">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="marketing" onclick="setCategory('marketing', this)">
+        <span class="cat-icon">📣</span> Marketing <span class="cat-count" id="count-marketing">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="ai" onclick="setCategory('ai', this)">
+        <span class="cat-icon">🤖</span> AI & Automation <span class="cat-count" id="count-ai">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="integration" onclick="setCategory('integration', this)">
+        <span class="cat-icon">🔗</span> Integrations <span class="cat-count" id="count-integration">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="discovery" onclick="setCategory('discovery', this)">
+        <span class="cat-icon">🔎</span> Discovery <span class="cat-count" id="count-discovery">—</span>
+      </div>
+      <div class="sidebar-item" data-cat="core" onclick="setCategory('core', this)">
+        <span class="cat-icon">⚙️</span> Core System <span class="cat-count" id="count-core">—</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="store-main">
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">🔍</span>
+        <input class="search-box" type="text" id="search-input" placeholder="Search apps..." oninput="onSearch(this.value)">
+      </div>
+    </div>
+
+    <!-- Installed section (only shown on "installed" filter or all) -->
+    <div class="store-section" id="installed-section" style="display:none">
+      <div class="section-title">Installed Apps <span id="installed-section-count"></span></div>
+      <div class="module-grid" id="installed-grid"></div>
+    </div>
+
+    <!-- Browse section -->
+    <div class="store-section" id="browse-section">
+      <div class="section-title" id="browse-title">All Apps</div>
+      <div id="browse-grid" class="module-grid">
+        <div class="grid-loading">
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+          <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : 'https://api.cybercheck.com/api';
+
+const SITE_ID = window._siteId || new URLSearchParams(window.location.search).get('site_id') || '';
+const TOKEN   = window._authToken || localStorage.getItem('cc_token') || '';
+
+const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` };
+
+let allModules = [];
+let installedIds = new Set();
+let currentCat = 'all';
+let searchQuery = '';
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  const [manifestRes, installedRes] = await Promise.all([
+    fetch(`${API}/modules/available`),
+    fetch(`${API}/modules/installed?site_id=${SITE_ID}`, { headers }),
+  ]);
+
+  allModules = manifestRes.ok ? await manifestRes.json() : [];
+  const installed = installedRes.ok ? await installedRes.json() : [];
+  installedIds = new Set(installed.map(m => m.module_id));
+
+  // Update counts
+  updateCounts();
+  render();
+}
+
+function updateCounts() {
+  document.getElementById('count-all').textContent = allModules.length;
+  document.getElementById('count-installed').textContent = installedIds.size;
+  document.getElementById('installed-num').textContent = installedIds.size;
+
+  ['booking','content','commerce','marketing','ai','integration','discovery','core'].forEach(cat => {
+    const n = allModules.filter(m => m.category === cat).length;
+    const el = document.getElementById(`count-${cat}`);
+    if (el) el.textContent = n;
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  let modules = allModules;
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    modules = modules.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      (m.description || '').toLowerCase().includes(q) ||
+      (m.category || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (currentCat === 'installed') {
+    modules = modules.filter(m => installedIds.has(m.id));
+    document.getElementById('installed-section').style.display = 'none';
+    renderGrid('browse-grid', modules);
+    document.getElementById('browse-title').textContent = `Installed Apps`;
+    return;
+  }
+
+  if (currentCat !== 'all') {
+    modules = modules.filter(m => m.category === currentCat);
+  }
+
+  // Split into installed vs available
+  const installed = modules.filter(m => installedIds.has(m.id) || m.is_core);
+  const available = modules.filter(m => !installedIds.has(m.id) && !m.is_core);
+
+  if (currentCat === 'all' && !searchQuery && installed.length > 0) {
+    document.getElementById('installed-section').style.display = 'block';
+    renderGrid('installed-grid', installed);
+    document.getElementById('installed-section-count').textContent = `(${installed.length})`;
+  } else {
+    document.getElementById('installed-section').style.display = 'none';
+  }
+
+  renderGrid('browse-grid', currentCat === 'all' && !searchQuery ? available : modules);
+
+  const catLabels = {
+    all: 'All Apps', booking: 'Booking', content: 'Content', commerce: 'Commerce',
+    marketing: 'Marketing', ai: 'AI & Automation', integration: 'Integrations',
+    discovery: 'Discovery', core: 'Core System'
+  };
+  const title = searchQuery ? `Search results` : (currentCat === 'all' ? 'Available to Install' : catLabels[currentCat]);
+  document.getElementById('browse-title').textContent = title;
+}
+
+function renderGrid(containerId, modules) {
+  const grid = document.getElementById(containerId);
+  if (!modules.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>No apps found</p></div>`;
+    return;
+  }
+  grid.innerHTML = modules.map(m => moduleCard(m)).join('');
+}
+
+function moduleCard(m) {
+  const isInstalled = installedIds.has(m.id);
+  const isCore = m.is_core;
+
+  let badge = '';
+  if (isCore) badge = `<div class="core-badge">Core</div>`;
+  else if (isInstalled) badge = `<div class="installed-badge">Installed</div>`;
+
+  let btnClass, btnText;
+  if (isCore) { btnClass = 'core-btn'; btnText = 'Always On'; }
+  else if (isInstalled) { btnClass = 'uninstall'; btnText = 'Remove'; }
+  else { btnClass = 'install'; btnText = 'Install'; }
+
+  const priceClass = !m.price_monthly ? 'free' : 'paid';
+  const priceText = !m.price_monthly ? 'Free' : `$${m.price_monthly}/mo`;
+
+  return `
+    <div class="module-card ${isInstalled ? 'installed' : ''} ${isCore ? 'core' : ''}" id="card-${m.id}">
+      ${badge}
+      <div class="card-top">
+        <div class="module-icon">${m.icon || '📦'}</div>
+        <div class="module-info">
+          <div class="module-name">${m.name}</div>
+          <div class="module-category">${m.category}</div>
+        </div>
+      </div>
+      <div class="module-desc">${m.description || ''}</div>
+      <div class="card-footer">
+        <span class="module-price ${priceClass}">${priceText}</span>
+        <button
+          class="btn-install ${btnClass}"
+          ${isCore ? 'disabled' : ''}
+          onclick="${isInstalled && !isCore ? `uninstall('${m.id}')` : isCore ? '' : `install('${m.id}')`}"
+        >${btnText}</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── Actions ───────────────────────────────────────────────────
+async function install(moduleId) {
+  const btn = document.querySelector(`#card-${moduleId} .btn-install`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Installing...'; }
+
+  try {
+    const res = await fetch(`${API}/modules/install`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ site_id: SITE_ID, module_id: moduleId }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    installedIds.add(moduleId);
+    updateCounts();
+    render();
+    showToast('success', `✅ ${data.data?.module_manifest?.name || 'App'} installed — check your dashboard`);
+
+    // Notify parent dashboard to reload modules if embedded
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'module-installed', moduleId }, '*');
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Install'; }
+    showToast('error', `Failed: ${e.message}`);
+  }
+}
+
+async function uninstall(moduleId) {
+  const mod = allModules.find(m => m.id === moduleId);
+  if (!confirm(`Remove "${mod?.name || moduleId}" from your dashboard?`)) return;
+
+  const btn = document.querySelector(`#card-${moduleId} .btn-install`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
+
+  try {
+    const res = await fetch(`${API}/modules/uninstall/${moduleId}?site_id=${SITE_ID}`, {
+      method: 'DELETE', headers,
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    installedIds.delete(moduleId);
+    updateCounts();
+    render();
+    showToast('success', `Removed — refresh your dashboard to see changes`);
+
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'module-uninstalled', moduleId }, '*');
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Remove'; }
+    showToast('error', `Failed: ${e.message}`);
+  }
+}
+
+// ── Filters ───────────────────────────────────────────────────
+function setCategory(cat, el) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  currentCat = cat;
+  searchQuery = '';
+  document.getElementById('search-input').value = '';
+  render();
+}
+
+function onSearch(q) {
+  searchQuery = q.trim();
+  currentCat = 'all';
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.querySelector('[data-cat="all"]').classList.add('active');
+  render();
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+let toastTimer;
+function showToast(type, msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-icon').textContent = type === 'success' ? '✅' : '❌';
+  toast.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 3500);
+}
+
+init();
+</script>
+</body>
+</html>

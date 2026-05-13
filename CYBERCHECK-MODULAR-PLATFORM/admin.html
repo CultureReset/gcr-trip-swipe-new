@@ -820,15 +820,13 @@
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Sunday</label><input id="be-hours-sun" type="text" placeholder="11am - 8pm" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
                 <div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:5px;">Seasonal Notes</label><input id="be-seasonal" type="text" style="width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;"></div>
               </div>
-              <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-kids"> Kids Friendly</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-pets"> Pet Friendly</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-live-music"> Live Music</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-outdoor"> Outdoor Seating</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-reservations"> Reservations</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-delivery"> Delivery</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-takeout"> Takeout</label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:14px;"><input type="checkbox" id="be-alcohol"> Alcohol</label>
+              <div style="margin-bottom:20px;">
+                <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;">Amenity Tags</label>
+                <div id="be-tags-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+                <div style="display:flex;gap:8px;">
+                  <input id="be-tag-input" type="text" placeholder="Add a tag (e.g. Live Music, Dog Friendly...)" style="flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:13px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addBizTag();}">
+                  <button onclick="addBizTag()" class="btn btn-outline btn-sm" style="white-space:nowrap;">+ Add Tag</button>
+                </div>
               </div>
               <button onclick="saveBizHours()" class="btn btn-primary">Save Hours</button>
             </div>
@@ -2021,7 +2019,9 @@
             <div style="flex:1;min-width:220px;position:relative;">
               <input type="text" id="mb-biz-search" placeholder="🔍 Search businesses..." autocomplete="off"
                 style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;box-sizing:border-box;"
-                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()" onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},400)">
+                oninput="mbShowBizDropdown()" onfocus="mbShowBizDropdown()"
+                onkeydown="if(event.key==='Enter'){var f=document.querySelector('#mb-biz-dropdown [onmousedown]');if(f)f.dispatchEvent(new MouseEvent('mousedown'));}"
+                onblur="setTimeout(function(){document.getElementById('mb-biz-dropdown').style.display='none'},250)">
               <div id="mb-biz-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e293b;border:1px solid #334155;border-radius:8px;max-height:240px;overflow-y:auto;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);margin-top:4px;"></div>
               <!-- hidden select kept for value/slug lookup -->
               <select id="mb-biz-select" style="display:none"></select>
@@ -5417,6 +5417,7 @@
     var _bizDrinkItems = [];
     var _bizSpecials = [];
     var _bizEvents = [];
+    var _bizTags = [];
     var _bizHHItems = [];
 
     var _inputStyle = 'width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--card-border);border-radius:6px;color:var(--text);font-size:13px;';
@@ -5475,14 +5476,9 @@
           if (el) el.value = content['hours_' + d] || '';
         });
         document.getElementById('be-seasonal').value = content.seasonal_notes || '';
-        document.getElementById('be-kids').checked = !!content.kids_friendly;
-        document.getElementById('be-pets').checked = !!content.pet_friendly;
-        document.getElementById('be-live-music').checked = !!content.live_music;
-        document.getElementById('be-outdoor').checked = !!content.outdoor_seating;
-        document.getElementById('be-reservations').checked = !!content.reservations;
-        document.getElementById('be-delivery').checked = !!content.delivery;
-        document.getElementById('be-takeout').checked = !!content.takeout;
-        document.getElementById('be-alcohol').checked = !!content.alcohol;
+        // Load tags from GCR entity_tags array
+        _bizTags = (_bizEditorData.tags || []).map(function(t) { return t.tag; });
+        renderBizTags();
         // Happy hour
         var hh = content.happy_hour || {};
         document.getElementById('be-hh-days').value = hh.days || '';
@@ -5763,21 +5759,33 @@
         hoursData['hours_' + d] = document.getElementById('be-hours-' + d).value;
       });
       hoursData.seasonal_notes = document.getElementById('be-seasonal').value;
-      hoursData.kids_friendly = document.getElementById('be-kids').checked;
-      hoursData.pet_friendly = document.getElementById('be-pets').checked;
-      hoursData.live_music = document.getElementById('be-live-music').checked;
-      hoursData.outdoor_seating = document.getElementById('be-outdoor').checked;
-      hoursData.reservations = document.getElementById('be-reservations').checked;
-      hoursData.delivery = document.getElementById('be-delivery').checked;
-      hoursData.takeout = document.getElementById('be-takeout').checked;
-      hoursData.alcohol = document.getElementById('be-alcohol').checked;
       try {
         await fetch(API_BASE + '/api/admin/businesses/' + _bizEditorSiteId + '/full', {
           method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ hours: hoursData })
+          body: JSON.stringify({ hours: hoursData, custom_tags: _bizTags })
         });
-        toast('Hours saved!');
+        toast('Hours & tags saved!');
       } catch(e) { toast(e.message, 'error'); }
+    }
+
+    function renderBizTags() {
+      var chips = document.getElementById('be-tags-chips');
+      if (!chips) return;
+      chips.innerHTML = _bizTags.map(function(tag, i) {
+        return '<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--primary);color:#fff;border-radius:20px;font-size:13px;">' +
+          escHtml(tag) +
+          '<button onclick="_bizTags.splice(' + i + ',1);renderBizTags();" style="background:none;border:none;color:#fff;cursor:pointer;font-size:15px;padding:0;line-height:1;">×</button>' +
+          '</span>';
+      }).join('') || '<span style="font-size:13px;color:var(--text-muted);">No tags yet.</span>';
+    }
+
+    function addBizTag() {
+      var input = document.getElementById('be-tag-input');
+      var val = (input.value || '').trim();
+      if (!val) return;
+      var norm = val.toLowerCase().replace(/[\s\-]+/g, '_');
+      if (!_bizTags.includes(norm)) { _bizTags.push(norm); renderBizTags(); }
+      input.value = '';
     }
 
     // ── PHOTOS ────────────────────────────────────────
@@ -11556,7 +11564,7 @@
         }
         return '<div style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid #334155;background:#1e293b;transition:.1s;" ' +
           'onmouseover="this.style.background=\'#273548\'" onmouseout="this.style.background=\'#1e293b\'" ' +
-          'onmousedown="event.preventDefault();mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
+          'onmousedown="event.preventDefault();mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')" onclick="mbSelectBiz(' + JSON.stringify(b.site_id||b.id) + ',' + JSON.stringify(name) + ',' + JSON.stringify(slug) + ')">' +
           '<span>' + displayName + '</span>' +
           (b.city ? '<span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— ' + escHtml(b.city) + '</span>' : '') +
           '</div>';

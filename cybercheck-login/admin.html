@@ -5246,6 +5246,7 @@
   <script>
     var API_BASE = window.CC_API_BASE || 'https://gcr-api-gules.vercel.app';
     var GCR_API_BASE = 'https://gcr-api-gules.vercel.app';
+    var GCR_ADMIN_API = 'https://gcr-api-clean-fresh.vercel.app';
 
     function getAuthToken() {
       try {
@@ -5329,7 +5330,7 @@
     async function loadOverview() {
       try {
         var token = getAuthToken();
-        var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
         var gcr = res.ok ? await res.json() : [];
         if (!Array.isArray(gcr)) gcr = [];
 
@@ -5400,7 +5401,7 @@
       if (!confirm('Permanently delete "' + name + '" from the database?\n\nThis removes ALL linked data (tags, menus, events, specials) and cannot be undone.')) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
         });
@@ -5556,7 +5557,7 @@
       if (!confirm('Send dashboard invite email to ' + name + '?')) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/invite', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/invite', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
         });
@@ -5571,7 +5572,7 @@
     async function toggleGCRLive(entityId, isActive, checkboxEl) {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: { is_active: isActive } })
@@ -5600,7 +5601,7 @@
       var btn = document.querySelector('[onclick="autoActivateTop5()"]');
       if (btn) { btn.disabled = true; btn.textContent = '⏳ Running...'; }
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/auto-activate-top5', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/auto-activate-top5', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({})
@@ -5659,7 +5660,7 @@
       var token = getAuthToken();
       document.getElementById('gcr-claims-body').innerHTML = '<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted);">Loading...</td></tr>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/claims', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/claims', { headers: { 'Authorization': 'Bearer ' + token } });
         _allGCRClaims = res.ok ? await res.json() : [];
         renderGCRClaims(_allGCRClaims);
         // update badge
@@ -5819,7 +5820,7 @@
       });
 
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -5884,7 +5885,7 @@
         progressText.textContent = 'Importing ' + (i + 1) + ' of ' + _csvRows.length + '...';
         progressBar.style.width = Math.round(((i + 1) / _csvRows.length) * 100) + '%';
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/import-csv', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/import-csv', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify(_csvRows[i])
@@ -5914,7 +5915,7 @@
           fetch(API_BASE + '/api/reviews', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
           fetch(API_BASE + '/api/reviews/stats', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
           fetch(API_BASE + '/api/reviews/requests', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
-          fetch(API_BASE + '/api/admin/gcr/entities?limit=200', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?limit=200', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } }),
         ]);
         const reviews  = rvRes.ok    ? await rvRes.json()   : [];
         const stats    = statsRes.ok ? await statsRes.json() : {};
@@ -6289,7 +6290,7 @@
       _eventsLoaded = true;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/events', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/events', { headers: { 'Authorization': 'Bearer ' + token } });
         var events = res.ok ? await res.json() : [];
         if (!events.length) {
           document.getElementById('gcr-events-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No events.</td></tr>';
@@ -6400,7 +6401,7 @@
         cover_charge: document.getElementById('event-cover-charge').value || null,
         image_url: document.getElementById('event-image-url').value || null,
       };
-      var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
+      var url = id ? GCR_ADMIN_API + '/api/admin/gcr/events/' + id : GCR_ADMIN_API + '/api/admin/gcr/events';
       var method = id ? 'PUT' : 'POST';
       try {
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -6417,7 +6418,7 @@
       if (!confirm('Delete this event?')) return;
       var token = getAuthToken();
       try {
-        await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         toast('Event deleted.');
         _eventsLoaded = false;
         loadGCREvents();
@@ -6431,7 +6432,7 @@
       _specialsLoaded = true;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/specials', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials', { headers: { 'Authorization': 'Bearer ' + token } });
         var specials = res.ok ? await res.json() : [];
         if (!specials.length) {
           document.getElementById('gcr-specials-body').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted);">No specials.</td></tr>';
@@ -6483,7 +6484,7 @@
         end_time: document.getElementById('special-end-time').value || null,
         is_active: document.getElementById('special-active').checked,
       };
-      var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
+      var url = id ? GCR_ADMIN_API + '/api/admin/gcr/specials/' + id : GCR_ADMIN_API + '/api/admin/gcr/specials';
       var method = id ? 'PUT' : 'POST';
       try {
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -6500,7 +6501,7 @@
       if (!confirm('Delete this special?')) return;
       var token = getAuthToken();
       try {
-        await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         toast('Special deleted.');
         _specialsLoaded = false;
         loadGCRSpecials();
@@ -6516,7 +6517,7 @@
       var body = document.getElementById('ads-list-body');
       if (!body) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + token } });
         var d = await res.json();
         var ads = d.ads || [];
         if (!ads.length) {
@@ -6559,7 +6560,7 @@
         document.getElementById('ad-active').checked = true;
       } else {
         // find from existing DOM data — reload from API instead
-        fetch(API_BASE + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
+        fetch(GCR_ADMIN_API + '/api/admin/gcr/ads', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } })
           .then(function(r){ return r.json(); })
           .then(function(d){
             var ad = (d.ads || []).find(function(a){ return a.id === id; });
@@ -6597,7 +6598,7 @@
       var token = getAuthToken();
       try {
         var method = id ? 'PUT' : 'POST';
-        var url = id ? API_BASE + '/api/admin/gcr/ads/' + id : API_BASE + '/api/admin/gcr/ads';
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/ads/' + id : GCR_ADMIN_API + '/api/admin/gcr/ads';
         var res = await fetch(url, { method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast(id ? 'Ad updated!' : 'Ad created!', 'success');
@@ -6610,7 +6611,7 @@
     async function deleteAd(id) {
       if (!confirm('Delete this ad?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/ads/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/ads/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Ad deleted', 'success');
         _adsLoaded = false;
         loadGCRAds();
@@ -6641,7 +6642,7 @@
       if (!_bulkEventsData.length) { toast('No valid CSV loaded', 'error'); return; }
       var token = getAuthToken();
       // Match business names to site_ids
-      var res = await fetch(API_BASE + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/businesses', { headers: { 'Authorization': 'Bearer ' + token } });
       var bizList = res.ok ? await res.json() : [];
       var matched = [], unmatched = [];
       _bulkEventsData.forEach(function(row) {
@@ -6664,7 +6665,7 @@
       var success = 0, errors = 0;
       for (var i = 0; i < events.length; i++) {
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/events', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/events', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify(events[i])
@@ -7100,7 +7101,7 @@
       switchBizTab('basic');
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
         _bizEditorData = await res.json();
         var biz = _bizEditorData.business || {};
         var content = _bizEditorData.content || {};
@@ -7503,7 +7504,7 @@
       }
       status.textContent = success + ' of ' + compressed.length + ' uploaded.';
       // Reload photos
-      var res2 = await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bizEditorSiteId, { headers: { 'Authorization': 'Bearer ' + token } });
+      var res2 = await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bizEditorSiteId, { headers: { 'Authorization': 'Bearer ' + token } });
       var d = await res2.json();
       renderBizPhotos(d.media || []);
     }
@@ -7964,7 +7965,7 @@
         var specials = _aoResult.specials || [];
         for (var j = 0; j < specials.length; j++) {
           var sp = specials[j];
-          var r2 = await fetch(API_BASE + '/api/admin/gcr/specials', {
+          var r2 = await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials', {
             method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify({ entity_id: siteId, special_name: sp.special_name||sp.name, discount_text: sp.discount_text||'', description: sp.description||'', days: sp.days||'', start_time: sp.start_time||null, end_time: sp.end_time||null })
           });
@@ -8268,7 +8269,7 @@
       document.getElementById('bd-biz-name').textContent = 'Loading…';
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + siteId, { headers: { 'Authorization': 'Bearer ' + token } });
         _bdData = await res.json();
         var b = _bdData.business || {};
         _bdSlug = b.slug || siteId;
@@ -8355,7 +8356,7 @@
         featured:         (document.getElementById('bd-gcr-featured')||{}).checked,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: entity }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         toast('Profile saved!', 'success');
         clearBdDirty();
@@ -8394,12 +8395,12 @@
       var payload = { item_name: document.getElementById('bd-menuitem-form-name').value, price: parseFloat(document.getElementById('bd-menuitem-form-price').value) || null, description: document.getElementById('bd-menuitem-form-desc').value || null, image_url: document.getElementById('bd-menuitem-form-photo').value || null };
       var method = id ? 'PUT' : 'POST';
       var table = isDrink ? 'drink-items' : 'menu-items';
-      var url = id ? API_BASE + '/api/admin/gcr/' + table + '/' + id : API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/' + table;
+      var url = id ? GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id : GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/' + table;
       try {
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-menuitem').style.display = 'none';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdMenuItems2 = d.menu || [];
         _bdDrinkItems2 = d.drinks || [];
         renderBizDashMenu(); renderBizDashDrinks(); toast('Saved!', 'success');
@@ -8409,7 +8410,7 @@
       if (!confirm('Delete this item?')) return;
       var token = getAuthToken();
       var table = type === 'drink' ? 'drink-items' : 'menu-items';
-      await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (type === 'drink') { _bdDrinkItems2 = _bdDrinkItems2.filter(function(i){ return i.id !== id; }); renderBizDashDrinks(); }
       else { _bdMenuItems2 = _bdMenuItems2.filter(function(i){ return i.id !== id; }); renderBizDashMenu(); }
       toast('Deleted', 'success');
@@ -8426,7 +8427,7 @@
     async function saveBizDashHappyHour() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/happy-hour', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hh_days: document.getElementById('bd-hh-days').value, hh_start: document.getElementById('bd-hh-start').value, hh_end: document.getElementById('bd-hh-end').value }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/happy-hour', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hh_days: document.getElementById('bd-hh-days').value, hh_start: document.getElementById('bd-hh-start').value, hh_end: document.getElementById('bd-hh-end').value }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Happy hour saved!', 'success');
         clearBdDirty();
@@ -8457,18 +8458,18 @@
       var id = document.getElementById('bd-special-form-id').value; if (id) payload.id = id;
       try {
         var method = id ? 'PUT' : 'POST';
-        var url = id ? API_BASE + '/api/admin/gcr/specials/' + id : API_BASE + '/api/admin/gcr/specials';
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/specials/' + id : GCR_ADMIN_API + '/api/admin/gcr/specials';
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-special').style.display = 'none';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdSpecials2 = d.specials || []; renderBizDashSpecials(); toast('Saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
     async function deleteBizSpecialItem(id) {
       if (!confirm('Delete?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _bdSpecials2 = _bdSpecials2.filter(function(s){ return s.id !== id; }); renderBizDashSpecials(); toast('Deleted', 'success');
     }
 
@@ -8495,18 +8496,18 @@
       var id = document.getElementById('bd-event-form-id').value; if (id) payload.id = id;
       try {
         var method = id ? 'PUT' : 'POST';
-        var url = id ? API_BASE + '/api/admin/gcr/events/' + id : API_BASE + '/api/admin/gcr/events';
+        var url = id ? GCR_ADMIN_API + '/api/admin/gcr/events/' + id : GCR_ADMIN_API + '/api/admin/gcr/events';
         var res = await fetch(url, { method: method, headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({}, payload, { entity_id: _bdSiteId })) });
         if (!res.ok) throw new Error('Save failed');
         document.getElementById('modal-biz-event').style.display = 'none';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdEvents2 = d.events || []; renderBizDashEvents(); toast('Saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
     async function deleteBizEventItem(id) {
       if (!confirm('Delete?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _bdEvents2 = _bdEvents2.filter(function(e){ return e.id !== id; }); renderBizDashEvents(); toast('Deleted', 'success');
     }
 
@@ -8718,7 +8719,7 @@
         var res = await fetch(API_BASE + '/api/admin/businesses/' + _bdSiteId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ url: url, caption: caption }) });
         if (!res.ok) throw new Error('Failed');
         document.getElementById('bd-media-url').value = ''; document.getElementById('bd-media-caption').value = '';
-        var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+        var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
         _bdData.media = d.media || []; renderBizMedia(); toast('Photo added!', 'success');
       } catch(err) { toast(err.message, 'error'); }
     }
@@ -8752,7 +8753,7 @@
       }
       var clearInput = document.getElementById('bd-media-upload-input') || document.getElementById('bd-media-file');
       if (clearInput) clearInput.value = '';
-      var d = await (await fetch(API_BASE + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
+      var d = await (await fetch(GCR_ADMIN_API + '/api/admin/gcr/business-data/' + _bdSiteId, { headers: { 'Authorization': 'Bearer ' + token } })).json();
       _bdData.media = d.media || []; renderBizMedia(); toast(uploaded + ' photo(s) uploaded!', 'success');
     }
 
@@ -8799,7 +8800,7 @@
       if (!wrap || !_bdSiteId) return;
       wrap.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Loading…</p>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation', {
           headers: { 'Authorization': 'Bearer ' + getAuthToken() }
         });
         if (!res.ok) throw new Error('Load failed');
@@ -8843,7 +8844,7 @@
       var name = prompt('Section name (e.g. "Catch of the Day", "Veggie of the Day"):');
       if (!name || !name.trim()) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation/sections', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _bdSiteId + '/daily-rotation/sections', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: name.trim(), sort_order: _rotationSections.length })
@@ -8956,7 +8957,7 @@
     async function loadEntities() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         _allEntities = data.entities || [];
         renderEntities(_allEntities);
@@ -9004,7 +9005,7 @@
     async function toggleEntityActive(entityId, isActive) {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: { is_active: isActive } })
@@ -9114,21 +9115,21 @@
           if ((!curA[f] || curA[f] === '') && entB[f]) updateFields[f] = entB[f];
         });
         if (Object.keys(updateFields).length) {
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: updateFields }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: updateFields }) });
         }
 
         // 4. Copy tags from B (skip dupes)
         var existTags = (dataA.tags||[]).map(function(t){ return t.tag.toLowerCase(); });
         var newTags = (dataB.tags||[]).filter(function(t){ return !existTags.includes(t.tag.toLowerCase()); });
         for (var i=0; i<newTags.length; i++) {
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: newTags[i].tag, tag_category: newTags[i].tag_category }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: newTags[i].tag, tag_category: newTags[i].tag_category }) });
         }
 
         // 5. Copy features from B (skip dupes)
         var existFeats = (dataA.features||[]).map(function(f){ return f.label.toLowerCase(); });
         var newFeats = (dataB.features||[]).filter(function(f){ return !existFeats.includes(f.label.toLowerCase()); });
         for (var i=0; i<newFeats.length; i++) {
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeats[i].label, sort_order: existFeats.length + i }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeats[i].label, sort_order: existFeats.length + i }) });
         }
 
         // 6. Copy sections from B that don't exist on A
@@ -9139,12 +9140,12 @@
         var sectionsAdded = 0;
         for (var i=0; i<newSections.length; i++) {
           var s = newSections[i];
-          await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityA + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: s.section_key, section_label: s.section_label, section_type: s.section_type, sort_order: s.sort_order || 50 }) });
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityA + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: s.section_key, section_label: s.section_label, section_type: s.section_type, sort_order: s.sort_order || 50 }) });
           sectionsAdded++;
         }
 
         // 7. Delete entity B
-        await fetch(API_BASE + '/api/admin/gcr/entities/' + _mergeEntityB, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _mergeEntityB, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
 
         toast('Merged! ' + nameB + ' → ' + nameA + ' (' + newTags.length + ' tags, ' + newFeats.length + ' features, ' + sectionsAdded + ' sections added)', 'success');
         loadEntities();
@@ -9157,7 +9158,7 @@
     async function toggleEntitySponsored(entityId, isSponsored) {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: { is_sponsored: isSponsored, sort_order: isSponsored ? 0 : 999 } })
@@ -9175,7 +9176,7 @@
       if (!confirm('Permanently delete "' + entityName + '"? This cannot be undone.')) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, {
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + token }
         });
@@ -9313,7 +9314,7 @@
         description: document.getElementById('ent-description') ? document.getElementById('ent-description').value : undefined,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: payload }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Save failed');
         document.getElementById('ent-editor-title').textContent = payload.name;
         toast('Entity saved!', 'success');
@@ -9354,7 +9355,7 @@
       };
       if (!entity.name || !entity.slug) { toast('Name and slug are required', 'error'); return; }
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityId = result.id;
@@ -9379,7 +9380,7 @@
         return { day: d.label, open: closed ? null : openVal, close: closed ? null : closeVal, closed: closed };
       });
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ hours: { schedule: schedule } })
@@ -9400,7 +9401,7 @@
         description: (document.getElementById('ent-hh-desc')  || {}).value || '',
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ happyHour: payload })
@@ -9426,7 +9427,7 @@
       var payload = { item_name: nm, price: price ? parseFloat(price) : null, description: dc || null };
       try {
         var token = getAuthToken();
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
           method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -9440,7 +9441,7 @@
       if (!id || !confirm('Delete this item?')) return;
       try {
         var token = getAuthToken();
-        await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         toast('Deleted', 'success');
         await reloadEntContent();
       } catch(err) { toast(err.message, 'error'); }
@@ -9450,7 +9451,7 @@
       if (!id) return;
       try {
         var token = getAuthToken();
-        var r = await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ image_url: url })
@@ -9472,7 +9473,7 @@
         var formData = new FormData();
         formData.append('file', fileInput.files[0]);
         // Upload to entity photos endpoint, then use URL for menu item
-        var r = await fetch(API_BASE + '/api/admin/gcr/upload-photo', {
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-photo', {
           method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData
         });
         var d = await r.json();
@@ -9507,7 +9508,7 @@
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
               var pr = (item.price_text || '').replace(/[^0-9.]/g,'');
-              await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/' + table, {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_name: item.name || item.item_name || '', price: pr ? parseFloat(pr) : null, description: item.description || null })
               });
@@ -9571,7 +9572,7 @@
     async function deleteGCREvent(id) {
       if (!confirm('Delete this event?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/events/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Event deleted.', 'success');
         await reloadEntContent();
       } catch(e) { toast(e.message, 'error'); }
@@ -9580,7 +9581,7 @@
     async function deleteGCRSpecial(id) {
       if (!confirm('Delete this special?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/specials/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Special deleted.', 'success');
         await reloadEntContent();
       } catch(e) { toast(e.message, 'error'); }
@@ -9623,7 +9624,7 @@
       try {
         var fd = new FormData(); fd.append('image', files[0]);
         var token = getAuthToken();
-        var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+        var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
         var res = await r.json();
         if (res.url) {
           document.getElementById('ent-item-edit-img-url').value = res.url;
@@ -9646,7 +9647,7 @@
         image_url:   document.getElementById('ent-item-edit-img-url').value.trim() || null,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, {
           method: 'PUT', headers: { 'Authorization': 'Bearer ' + getAuthToken(), 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -9662,7 +9663,7 @@
       var table = document.getElementById('ent-item-edit-table').value;
       if (!id || !confirm('Delete this item?')) return;
       try {
-        await fetch(API_BASE + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/' + table + '/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
         toast('Deleted', 'success');
         closeEntItemEdit();
         await reloadEntContent();
@@ -9699,7 +9700,7 @@
       if (!url.startsWith('http')) { toast('Enter a valid photo URL', 'error'); return; }
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: { add: [{ image_url: url, caption: (capEl||{}).value || '' }] } })
@@ -9716,7 +9717,7 @@
       if (!_currentEntityId) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId, {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId, {
           method: 'PATCH',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: { delete: [{ id: photoId, image_url: imageUrl }] } })
@@ -9816,7 +9817,7 @@
 
       if (existingTag) {
         // Remove tag
-        await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags/' + existingTag.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/tags/' + existingTag.id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         ent._tags = (ent._tags || []).filter(function(t){ return t.id !== existingTag.id; });
         btn.style.background = 'transparent';
         btn.style.color = 'var(--text)';
@@ -9824,7 +9825,7 @@
       } else {
         // Add tag
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag, tag_category: cat||null }) });
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag, tag_category: cat||null }) });
           var result = await res.json();
           if (!ent._tags) ent._tags = [];
           ent._tags.push(result.tag || { tag: tag, tag_category: cat });
@@ -9849,7 +9850,7 @@
       var token = getAuthToken();
       var ent = _allEntities.find(function(e){ return e.id === entityId; });
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag: tag }) });
         var result = await res.json();
         if (!ent._tags) ent._tags = [];
         ent._tags.push(result.tag || { tag: tag });
@@ -9869,7 +9870,7 @@
       if (!tag) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/tags', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ tag, tag_category: cat||null }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityTags.push(result.tag);
@@ -9881,7 +9882,7 @@
     async function removeEntTag(tagId) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/tags/' + tagId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityTags = _currentEntityTags.filter(function(t){ return t.id !== tagId; });
       renderEntTags();
     }
@@ -9902,7 +9903,7 @@
       if (!label) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityFeatures.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityFeatures.push(result.feature);
@@ -9914,7 +9915,7 @@
     async function removeEntFeature(fid) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/features/' + fid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityFeatures = _currentEntityFeatures.filter(function(f){ return f.id !== fid; });
       renderEntFeatures();
     }
@@ -9935,7 +9936,7 @@
       if (!label) return;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label, sort_order: _currentEntityPF.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntityPF.push(result.item);
@@ -9947,7 +9948,7 @@
     async function removeEntPF(pid) {
       if (!_currentEntityId) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/perfect-for/' + pid, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntityPF = _currentEntityPF.filter(function(p){ return p.id !== pid; });
       renderEntPF();
     }
@@ -10002,7 +10003,7 @@
       var type = document.getElementById('sec-new-type').value;
       if (!key || !label) { toast('Key and label are required', 'error'); return; }
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: _currentEntitySections.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _currentEntitySections.push(result.section);
@@ -10206,7 +10207,7 @@
     async function deleteEntSection(sectionId) {
       if (!confirm('Delete this section and all its content?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/entities/' + _currentEntityId + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + _currentEntityId + '/sections/' + sectionId, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _currentEntitySections = _currentEntitySections.filter(function(s){ return s.id !== sectionId; });
       renderEntSections();
       toast('Section deleted', 'success');
@@ -10231,7 +10232,7 @@
         if (sectionType === 'rich_text') {
           var res = await fetch(API_BASE + '/api/gcr/entity/___', { headers: {} });
           // Fetch directly from section
-          var r = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/rich-text-get');
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/rich-text-get');
           // Build inline editor
           body.innerHTML = '<div><label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;">About / Description Text</label>' +
             '<textarea id="sec-rt-text" rows="8" style="width:100%;padding:10px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;color:var(--text);font-size:14px;resize:vertical;"></textarea>' +
@@ -10241,13 +10242,13 @@
           if (section && section.content) document.getElementById('sec-rt-text').value = section.content.body_text || '';
 
         } else if (sectionType === 'bullets') {
-          var bulletsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/bullets', { headers: { 'Authorization': 'Bearer ' + token } });
+          var bulletsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/bullets', { headers: { 'Authorization': 'Bearer ' + token } });
           var bd = await bulletsRes.json();
           _secEditGroups = bd.bullets || [];
           renderSecBullets();
 
         } else if (sectionType === 'grouped_items') {
-          var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
+          var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
           var gd = await grpRes.json();
           _secEditGroups = gd.groups || [];
           renderSecGroups();
@@ -10279,7 +10280,7 @@
           body.innerHTML = hoursHtml;
 
         } else if (sectionType === 'gallery') {
-          var photosRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { headers: { 'Authorization': 'Bearer ' + token } });
+          var photosRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/photos', { headers: { 'Authorization': 'Bearer ' + token } });
           var pd = await photosRes.json();
           renderSecPhotos(pd.photos || []);
 
@@ -10294,7 +10295,7 @@
       var token = getAuthToken();
       var text = document.getElementById('sec-rt-text').value;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: text }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: text }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Saved!', 'success');
         // Update local cache
@@ -10327,7 +10328,7 @@
       var text = document.getElementById('sec-bullet-new').value.trim();
       if (!text) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: text, sort_order: _secEditGroups.length }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: text, sort_order: _secEditGroups.length }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         _secEditGroups.push(result.bullet);
@@ -10339,13 +10340,13 @@
     async function saveSecBullet(idx) {
       var token = getAuthToken();
       var b = _secEditGroups[idx];
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + b.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: b.bullet_text }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + b.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: b.bullet_text }) });
       toast('Saved', 'success');
     }
 
     async function deleteSecBullet(id, idx) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/bullets/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _secEditGroups.splice(idx, 1);
       renderSecBullets();
     }
@@ -10381,7 +10382,7 @@
 
     async function addSecGroup() {
       var token = getAuthToken();
-      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'New Group', sort_order: _secEditGroups.length }) });
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'New Group', sort_order: _secEditGroups.length }) });
       var result = await res.json();
       if (result.error) { toast(result.error, 'error'); return; }
       _secEditGroups.push({ ...result.group, items: [] });
@@ -10391,14 +10392,14 @@
     async function saveSecGroup(gi) {
       var token = getAuthToken();
       var g = _secEditGroups[gi];
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + g.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: g.title, subtitle: g.subtitle }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + g.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: g.title, subtitle: g.subtitle }) });
       toast('Group saved', 'success');
     }
 
     async function deleteSecGroup(id, gi) {
       if (!confirm('Delete this group and all its items?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/groups/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _secEditGroups.splice(gi, 1);
       renderSecGroups();
     }
@@ -10406,7 +10407,7 @@
     async function addSecItem(groupId, gi) {
       var token = getAuthToken();
       var payload = { group_id: groupId, item_name: 'New Item', item_type: 'menu_item', sort_order: (_secEditGroups[gi].items||[]).length };
-      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       var result = await res.json();
       if (result.error) { toast(result.error, 'error'); return; }
       if (!_secEditGroups[gi].items) _secEditGroups[gi].items = [];
@@ -10417,13 +10418,13 @@
     async function saveSecItem(gi, ii) {
       var token = getAuthToken();
       var item = _secEditGroups[gi].items[ii];
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items/' + item.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: item.item_name, item_description: item.item_description, price_text: item.price_text, price_numeric: item.price_numeric }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/items/' + item.id, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ item_name: item.item_name, item_description: item.item_description, price_text: item.price_text, price_numeric: item.price_numeric }) });
       toast('Item saved', 'success');
     }
 
     async function deleteSecItem(id, gi, ii) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/items/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/items/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _secEditGroups[gi].items.splice(ii, 1);
       renderSecGroups();
     }
@@ -10433,7 +10434,7 @@
       var token = getAuthToken();
       var payload = { address_line_1: document.getElementById('loc-addr').value, city: document.getElementById('loc-city').value, state: document.getElementById('loc-state').value, zip: document.getElementById('loc-zip').value, phone: document.getElementById('loc-phone').value, directions_url: document.getElementById('loc-dir').value, note_text: document.getElementById('loc-note').value };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error('Save failed');
         toast('Location saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -10450,7 +10451,7 @@
         return { day_of_week: d, open_time: closed ? null : (parts[0]||'').trim()||null, close_time: closed ? null : (parts[1]||'').trim()||null, is_closed: closed };
       });
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/hours', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hours }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/hours', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ hours }) });
         if (!res.ok) throw new Error('Save failed');
         toast('Hours saved!', 'success');
       } catch(err) { toast(err.message, 'error'); }
@@ -10482,7 +10483,7 @@
       var cap = document.getElementById('sec-photo-caption').value.trim();
       if (!url) return;
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url, caption: cap }) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url, caption: cap }) });
         var result = await res.json();
         if (result.error) { toast(result.error, 'error'); return; }
         document.getElementById('sec-photo-url').value = '';
@@ -10498,7 +10499,7 @@
 
     async function deleteSecPhoto(id, el) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/sections/' + _secEditId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + _secEditId + '/photos/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       if (el) el.remove();
       toast('Deleted', 'success');
     }
@@ -10549,7 +10550,7 @@
       var token = getAuthToken();
 
       if (type === 'section_based') {
-        var res = await fetch(API_BASE + '/api/admin/gcr/import-section-based', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/import-section-based', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(rows)
@@ -10574,7 +10575,7 @@
         for (var i = 0; i < rows.length; i++) {
           var r = rows[i];
           try {
-            var res = await fetch(API_BASE + '/api/admin/gcr/entities', {
+            var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities', {
               method: 'POST',
               headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
               body: JSON.stringify({ entity: { name: r.name, slug: r.slug, entity_subtype: r.entity_subtype, subtitle: r.subtitle, phone: r.phone, address_line_1: r.address_line_1, city: r.city, state: r.state, zip: r.zip, website_url: r.website_url, directions_url: r.directions_url, hero_image_url: r.hero_image_url } })
@@ -10610,7 +10611,7 @@
             if (!entity) { errors++; console.warn('Entity not found:', entry.entity_slug); continue; }
 
             // Get or create section
-            var secCreateRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entity.id + '/sections', {
+            var secCreateRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entity.id + '/sections', {
               method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
               body: JSON.stringify({ section_key: entry.section_key, section_label: entry.section_key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}), section_type: 'grouped_items', sort_order: 99 })
             });
@@ -10618,7 +10619,7 @@
             var sectionId = secCreateData.section?.id;
             if (!sectionId) {
               // Already exists — fetch it
-              var secListRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entity.id + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
+              var secListRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entity.id + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
               var secListData = await secListRes.json();
               var existSec = (secListData.sections||[]).find(function(s){ return s.section_key === entry.section_key; });
               if (!existSec) { errors++; continue; }
@@ -10626,7 +10627,7 @@
             }
 
             // Fetch existing items in this section to prevent duplicates
-            var existItemsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
+            var existItemsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', { headers: { 'Authorization': 'Bearer ' + token } });
             var existItemsData = await existItemsRes.json();
             var existingNames = new Set();
             (existItemsData.groups||[]).forEach(function(g) {
@@ -10637,7 +10638,7 @@
             for (var gTitle in entry.groups) {
               var items = entry.groups[gTitle];
               // Get or create group
-              var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/groups', {
+              var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/groups', {
                 method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: gTitle === 'default' ? '' : gTitle, sort_order: 0 })
               });
@@ -10652,7 +10653,7 @@
                 var item = items[ii];
                 var nameKey = (item.item_name||'').toLowerCase().trim();
                 if (existingNames.has(nameKey)) { skipped++; continue; } // duplicate — skip
-                await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/items', {
+                await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/items', {
                   method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                   body: JSON.stringify({ group_id: grpId||null, item_name: item.item_name, item_description: item.item_description||null, price_text: item.price_text||null, price_numeric: parseFloat(item.price_numeric)||null, item_type: item.item_type||'menu_item', sort_order: ii })
                 });
@@ -10796,14 +10797,14 @@
     async function getOrCreateEventsSection(entityId, token) {
       if (_gcrEntitySectionCache[entityId]) return _gcrEntitySectionCache[entityId];
       // Try creating — if exists, fetch it
-      var secRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', {
+      var secRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/sections', {
         method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ section_key: 'events', section_label: 'Events', section_type: 'cards', sort_order: 50 })
       });
       var secData = await secRes.json();
       if (secData.section?.id) { _gcrEntitySectionCache[entityId] = secData.section.id; return secData.section.id; }
       // Already exists — fetch
-      var listRes = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
+      var listRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/sections', { headers: { 'Authorization': 'Bearer ' + token } });
       var listData = await listRes.json();
       var sec = (listData.sections||[]).find(function(s){ return s.section_key === 'events'; });
       if (sec) { _gcrEntitySectionCache[entityId] = sec.id; return sec.id; }
@@ -10823,11 +10824,11 @@
           var sectionId = await getOrCreateEventsSection(e._entityId, token);
           if (!sectionId) { errors++; continue; }
           // Check for duplicate event title in this section
-          var existCardsRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', { headers: { 'Authorization': 'Bearer ' + token } });
+          var existCardsRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/cards', { headers: { 'Authorization': 'Bearer ' + token } });
           var existCardsData = await existCardsRes.json();
           var existTitles = new Set((existCardsData.cards||[]).map(function(c){ return (c.title||'').toLowerCase().trim(); }));
           if (existTitles.has((e.event_name||'').toLowerCase().trim())) { skipped++; continue; }
-          await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/cards', {
+          await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/cards', {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: e.event_name, subtitle: e.subtitle, description: e.description, badge_text: e.badge_text, price_text: e.price_text||null, image_url: e.image_url||null, link_url: e.link_url||null, sort_order: i })
           });
@@ -10854,7 +10855,7 @@
       var token = getAuthToken();
       var filter = (document.getElementById('gcr-review-filter') || {}).value || 'all';
       try {
-        var url = API_BASE + '/api/admin/gcr/reviews';
+        var url = GCR_ADMIN_API + '/api/admin/gcr/reviews';
         if (filter !== 'all') url += '?status=' + filter;
         var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
@@ -10897,7 +10898,7 @@
 
     async function updateGCRReviewStatus(reviewId, status) {
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/reviews/' + reviewId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/reviews/' + reviewId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ status: status }) });
       var r = _gcrReviews.find(function(x){ return x.id === reviewId; });
       if (r) r.status = status;
       renderGCRReviews();
@@ -10909,7 +10910,7 @@
     async function loadGCRCustomers() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/customers', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/customers', { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         _gcrCustomers = data.customers || [];
       } catch(e) { _gcrCustomers = []; }
@@ -10959,7 +10960,7 @@
 
       // ── 1. Entity-level views (existing gcrDb data) ──
       try {
-        var r1   = await fetch(API_BASE + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
+        var r1   = await fetch(GCR_ADMIN_API + '/api/admin/gcr/analytics', { headers: { 'Authorization': 'Bearer ' + token } });
         var d1   = await r1.json();
         if (el('ga-today-visitors')) el('ga-today-visitors').textContent = (d1.today_visitors || 0).toLocaleString();
         if (el('ga-today-views'))    el('ga-today-views').textContent    = (d1.today_views    || 0).toLocaleString();
@@ -11115,7 +11116,7 @@
       _gcrMessagingEntityId = entityId;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/messaging/' + entityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/messaging/' + entityId, { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         var s = data.settings || {};
         var el = function(id){ return document.getElementById(id); };
@@ -11141,7 +11142,7 @@
         notify_on_review: (el('gm-notify-review') || {}).checked !== false,
       };
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/messaging/' + _gcrMessagingEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/messaging/' + _gcrMessagingEntityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error();
         toast('Messaging settings saved!', 'success');
       } catch(e) { toast('Save failed — check if gcr_messaging_settings table exists', 'error'); }
@@ -11152,7 +11153,7 @@
     async function loadGCRCoupons() {
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/coupons', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/coupons', { headers: { 'Authorization': 'Bearer ' + token } });
         var data = await res.json();
         _gcrCoupons = data.coupons || [];
       } catch(e) { _gcrCoupons = []; }
@@ -11190,7 +11191,7 @@
     async function deleteGCRCoupon(id) {
       if (!confirm('Delete this coupon?')) return;
       var token = getAuthToken();
-      await fetch(API_BASE + '/api/admin/gcr/coupons/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      await fetch(GCR_ADMIN_API + '/api/admin/gcr/coupons/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
       _gcrCoupons = _gcrCoupons.filter(function(c){ return c.id !== id; });
       renderGCRCoupons();
       toast('Coupon deleted', 'success');
@@ -11229,7 +11230,7 @@
       if (maxUses) payload.max_uses = parseInt(maxUses);
       if (expires) payload.expires_at = expires + 'T23:59:59Z';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/coupons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/coupons', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!res.ok) throw new Error();
         document.getElementById('couponModal')?.remove();
         toast('Coupon created!', 'success');
@@ -11355,13 +11356,13 @@
             if (!cur[k] || cur[k] === '') mergeFields[k] = updateFields[k];
           }
           if (Object.keys(mergeFields).length) {
-            await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: mergeFields }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ entity: mergeFields }) });
           }
           // Add new features (skip existing)
           var existingFeatures = (curData.features||[]).map(function(f){ return f.label.toLowerCase(); });
           var newFeatures = (d.features||[]).filter(function(f){ return !existingFeatures.includes(f.toLowerCase()); });
           for (var fi=0; fi<newFeatures.length; fi++) {
-            await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeatures[fi], sort_order: existingFeatures.length + fi }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/features', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ label: newFeatures[fi], sort_order: existingFeatures.length + fi }) });
           }
         }
 
@@ -11371,7 +11372,7 @@
           // Check if section already exists
           var existing = _existingSections.find(function(s){ return s.section_key === key; });
           if (existing) return existing.id;
-          var r = await fetch(API_BASE + '/api/admin/gcr/entities/' + entityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: order }) });
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + entityId + '/sections', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ section_key: key, section_label: label, section_type: type, sort_order: order }) });
           var rd = await r.json(); return rd.section?.id;
         }
 
@@ -11380,14 +11381,14 @@
         // 2. About section
         if (d.description) {
           var sid = await createSection('about', 'About', 'rich_text', order++);
-          if (sid) await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: d.description }) });
+          if (sid) await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/rich-text', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ body_text: d.description }) });
         }
 
         // 3. Highlights
         if (d.highlights?.length) {
           var sid = await createSection('highlights', 'Highlights', 'bullets', order++);
           if (sid) for (var i=0; i<d.highlights.length; i++) {
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.highlights[i], sort_order: i }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.highlights[i], sort_order: i }) });
           }
         }
 
@@ -11396,11 +11397,11 @@
           var sid = await createSection('schedules', 'Times & Tickets', 'grouped_items', order++);
           if (sid) for (var i=0; i<d.schedules.length; i++) {
             var sched = d.schedules[i];
-            var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: sched.time||sched.name, subtitle: sched.name, sort_order: i }) });
+            var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: sched.time||sched.name, subtitle: sched.name, sort_order: i }) });
             var grpId = (await grpRes.json()).group?.id;
             if (grpId && sched.tickets) for (var j=0; j<sched.tickets.length; j++) {
               var t = sched.tickets[j];
-              await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: t.name, price_text: '$'+t.price, price_numeric: parseFloat(t.price)||null, item_type: 'ticket', sort_order: j }) });
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: t.name, price_text: '$'+t.price, price_numeric: parseFloat(t.price)||null, item_type: 'ticket', sort_order: j }) });
             }
           }
         }
@@ -11412,12 +11413,12 @@
           for (var meal in byMeal) {
             var sid = await createSection(meal.toLowerCase().replace(/\s+/g,'-'), meal, 'grouped_items', order++);
             if (sid) {
-              var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: meal, sort_order: 0 }) });
+              var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: meal, sort_order: 0 }) });
               var grpId = (await grpRes.json()).group?.id;
               var items = byMeal[meal];
               for (var i=0; i<items.length; i++) {
                 var item = items[i];
-                await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: item.name, item_description: item.description, price_text: item.price ? '$'+item.price : null, price_numeric: parseFloat(item.price)||null, item_type: 'menu_item', sort_order: i }) });
+                await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: item.name, item_description: item.description, price_text: item.price ? '$'+item.price : null, price_numeric: parseFloat(item.price)||null, item_type: 'menu_item', sort_order: i }) });
               }
             }
           }
@@ -11428,11 +11429,11 @@
           var hhData = typeof d.happy_hour === 'string' ? { schedule: d.happy_hour, deals: [] } : d.happy_hour;
           var sid = await createSection('happy_hour', 'Happy Hour', 'grouped_items', order++);
           if (sid) {
-            var grpRes = await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: hhData.schedule||'Happy Hour', sort_order: 0 }) });
+            var grpRes = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/groups', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: hhData.schedule||'Happy Hour', sort_order: 0 }) });
             var grpId = (await grpRes.json()).group?.id;
             if (grpId) for (var i=0; i<(hhData.deals||[]).length; i++) {
               var deal = hhData.deals[i];
-              await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: deal.name, item_description: deal.desc, price_text: deal.price, item_type: 'hh_item', sort_order: i }) });
+              await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/items', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: grpId, item_name: deal.name, item_description: deal.desc, price_text: deal.price, item_type: 'hh_item', sort_order: i }) });
             }
           }
         }
@@ -11441,7 +11442,7 @@
         if (d.restrictions?.length) {
           var sid = await createSection('restrictions', 'Guest Info', 'bullets', order++);
           if (sid) for (var i=0; i<d.restrictions.length; i++) {
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.restrictions[i], sort_order: i }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/bullets', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ bullet_text: d.restrictions[i], sort_order: i }) });
           }
         }
 
@@ -11450,13 +11451,13 @@
           var sid = await createSection('events', 'Events', 'cards', order++);
           if (sid) for (var i=0; i<d.events.length; i++) {
             var ev = d.events[i];
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sid + '/cards', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: ev.title||ev.name, description: ev.description, badge_text: ev.event_date, sort_order: i }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sid + '/cards', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ title: ev.title||ev.name, description: ev.description, badge_text: ev.event_date, sort_order: i }) });
           }
         }
 
         // 9. Location section always last
         var locSid = await createSection('location', 'Location', 'location', 99);
-        if (locSid) await fetch(API_BASE + '/api/admin/gcr/sections/' + locSid + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, phone: d.phone, website_url: d.website, directions_url: d.social?.google_maps }) });
+        if (locSid) await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + locSid + '/location', { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ address_line_1: d.address, city: d.city, state: d.state, zip: d.zip, phone: d.phone, website_url: d.website, directions_url: d.social?.google_maps }) });
 
         document.getElementById('ao-loading').style.display = 'none';
         document.getElementById('ao-saved').style.display = '';
@@ -11529,8 +11530,8 @@
       var token = getAuthToken();
       try {
         var [cfgRes, cardsRes] = await Promise.all([
-          fetch(API_BASE + '/api/admin/gcr/site-config', { headers: { 'Authorization': 'Bearer ' + token } }),
-          fetch(API_BASE + '/api/admin/gcr/category-cards', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/site-config', { headers: { 'Authorization': 'Bearer ' + token } }),
+          fetch(GCR_ADMIN_API + '/api/admin/gcr/category-cards', { headers: { 'Authorization': 'Bearer ' + token } }),
         ]);
         if (cfgRes.ok) {
           var d = await cfgRes.json();
@@ -11605,7 +11606,7 @@
         bg_image: document.getElementById('hero-bg-url').value,
         quick_tags: _siteHeroTags,
       };
-      var res = await fetch(API_BASE + '/api/admin/gcr/site-config/hero', {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/site-config/hero', {
         method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ value })
       });
@@ -11669,7 +11670,7 @@
           image_url: (document.getElementById('cc-img-' + p.id) || {}).value || '',
           color_gradient: (document.getElementById('cc-grad-' + p.id) || {}).value || '',
         };
-        return fetch(API_BASE + '/api/admin/gcr/category-cards/' + p.id, {
+        return fetch(GCR_ADMIN_API + '/api/admin/gcr/category-cards/' + p.id, {
           method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -11684,7 +11685,7 @@
       var catId = document.getElementById('ph-page-select').value;
       var token = getAuthToken();
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/category-page-config/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/category-page-config/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
         if (!res.ok) return;
         var d = await res.json();
         var cfg = d.config || {};
@@ -11715,7 +11716,7 @@
         page_description: document.getElementById('ph-description').value,
         hero_image_url: document.getElementById('ph-image-url').value,
       };
-      var res = await fetch(API_BASE + '/api/admin/gcr/category-page-config/' + catId, {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/category-page-config/' + catId, {
         method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -11732,7 +11733,7 @@
       var body = document.getElementById('top5-editor-body');
       body.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-assignments/' + catId, { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : { assignments: [] };
         _top5Assignments = d.assignments || [];
         renderTop5Editor(catId);
@@ -11789,7 +11790,7 @@
       results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);">Searching…</div>';
       try {
         var token = getAuthToken();
-        var res = await fetch(API_BASE + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entities?search=' + encodeURIComponent(q) + '&limit=20', { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : {};
         var entities = d.entities || [];
         if (!entities.length) { results.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--text-muted);">No results found.</div>'; return; }
@@ -11810,7 +11811,7 @@
       var token = getAuthToken();
       var nextPos = Math.min((_top5Assignments.length || 0) + 1, 5);
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId + '/order', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-assignments/' + catId + '/order', {
           method: 'PUT',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ assignments: [{ entity_id: entityId, sort_order: nextPos, is_featured: true }] })
@@ -11832,7 +11833,7 @@
           is_featured: document.getElementById('top5-feat-' + i).checked,
         };
       });
-      var res = await fetch(API_BASE + '/api/admin/gcr/page-assignments/' + catId + '/order', {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/page-assignments/' + catId + '/order', {
         method: 'PUT', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ orders })
       });
@@ -11849,7 +11850,7 @@
         var token = getAuthToken();
         var formData = new FormData(); formData.append('file', file);
         try {
-          var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+          var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
           var d = await r.json();
           if (!r.ok) { toast(d.error || 'Upload failed', 'error'); return; }
           var el = document.getElementById(targetInputId);
@@ -11871,7 +11872,7 @@
       var container = document.getElementById('ent-pages-list');
       container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">Loading...</div>';
       try {
-        var res = await fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId, { headers: { 'Authorization': 'Bearer ' + token } });
         var d = res.ok ? await res.json() : { assignments: [] };
         _entPageAssignments = d.assignments || [];
         renderEntPages();
@@ -11916,12 +11917,12 @@
         var pos = parseInt((document.getElementById('ep-pos-' + p.id) || {}).value) || 1;
 
         if (checked) {
-          promises.push(fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId, {
+          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId, {
             method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ category_id: p.id, sort_order: pos, is_featured: featured })
           }));
         } else if (currentIds.has(p.id)) {
-          promises.push(fetch(API_BASE + '/api/admin/gcr/entity-pages/' + _currentEntityId + '/' + p.id, {
+          promises.push(fetch(GCR_ADMIN_API + '/api/admin/gcr/entity-pages/' + _currentEntityId + '/' + p.id, {
             method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
           }));
         }
@@ -11946,17 +11947,17 @@
           var file = input.files[0]; if (!file) return;
           var formData = new FormData(); formData.append('file', file);
           try {
-            var r = await fetch(API_BASE + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+            var r = await fetch(GCR_ADMIN_API + '/api/admin/gcr/upload-image', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
             var d = await r.json();
             if (!r.ok) { toast(d.error || 'Upload failed', 'error'); return; }
-            await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: d.url, caption: caption || '' }) });
+            await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: d.url, caption: caption || '' }) });
             toast('Photo uploaded!', 'success');
           } catch(e) { toast(e.message, 'error'); }
         };
         input.click();
       } else {
         var cap = caption || prompt('Caption (optional):') || '';
-        await fetch(API_BASE + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url.trim(), caption: cap }) });
+        await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + sectionId + '/photos', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ image_url: url.trim(), caption: cap }) });
         toast('Photo added!', 'success');
       }
     }
@@ -13586,7 +13587,7 @@
         var _chosenProvider = _provSel ? _provSel.value : 'anthropic';
         var _chosenModel = _modSel ? _modSel.value : 'claude-sonnet-4-6';
 
-        var res = await fetch(API_BASE + '/api/admin/gcr/grok-chat', {
+        var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/grok-chat', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -14533,7 +14534,7 @@
       var section = _mbCats.find(function(c) { return c.name === oldName; });
       if (!section || !section.id) { toast('Section not found', 'error'); return; }
 
-      fetch(API_BASE + '/api/admin/gcr/entities/' + encodeURIComponent(_mbSiteId) + '/sections/' + encodeURIComponent(section.id), {
+      fetch(GCR_ADMIN_API + '/api/admin/gcr/entities/' + encodeURIComponent(_mbSiteId) + '/sections/' + encodeURIComponent(section.id), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
         body: JSON.stringify({ name: name })
@@ -14569,7 +14570,7 @@
 
     var toDelete = _mbItems.filter(function(i) { return i.category === name; });
     Promise.all(toDelete.map(function(item) {
-      return fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(item.id), {
+      return fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(item.id), {
         method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
     })).then(function() {
@@ -14648,14 +14649,14 @@
       var res;
       if (existingId) {
         // Update existing item
-        res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items/' + encodeURIComponent(existingId), {
+        res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items/' + encodeURIComponent(existingId), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(payload)
         });
       } else {
         // Create new item in section
-        res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
+        res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
           body: JSON.stringify(payload)
@@ -14681,7 +14682,7 @@
       var item = _mbItems.find(function(i) { return String(i.id) === String(id); });
       if (!item || !item.section_id) { toast('Item or section not found', 'error'); return; }
 
-      var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(id), {
+      var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(item.section_id) + '/items/' + encodeURIComponent(id), {
         method: 'DELETE', headers: { 'Authorization': 'Bearer ' + getAuthToken() }
       });
       if (res.ok) {
@@ -14926,7 +14927,7 @@
         }
 
         try {
-          var res = await fetch(API_BASE + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
+          var res = await fetch(GCR_ADMIN_API + '/api/admin/gcr/sections/' + encodeURIComponent(sectionId) + '/items', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
             body: JSON.stringify(payload)

@@ -2479,7 +2479,7 @@
         <script>
         (function(){
           var _ctTouristId = null, _ctConvId = null, _ctHistory = [];
-          var CTAPI = window.CC_API_BASE || 'https://gcr-api-gules.vercel.app';
+          var CTAPI = GCR_ADMIN_API || 'https://gcr-api-clean-fresh.vercel.app';
 
           function ctToken() { return localStorage.getItem('cc_admin_token') || ''; }
 
@@ -5244,7 +5244,7 @@
   <div id="toast-container" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
 
   <script>
-    var API_BASE = window.CC_API_BASE || 'https://gcr-api-gules.vercel.app';
+    var API_BASE = GCR_ADMIN_API || 'https://gcr-api-clean-fresh.vercel.app';
     var GCR_API_BASE = 'https://gcr-api-gules.vercel.app';
     var GCR_ADMIN_API = 'https://gcr-api-clean-fresh.vercel.app';
 
@@ -16789,7 +16789,7 @@
 
   <script>
   // ── Standalone AI Chat page ───────────────────────────────────
-  var _aichatApiBase = window.CC_API_BASE || 'https://gcr-api-gules.vercel.app';
+  var _aichatApiBase = GCR_ADMIN_API || 'https://gcr-api-clean-fresh.vercel.app';
 
   // ── Business search bar ──
   var _aichatBizSearchTimer = null;

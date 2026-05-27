@@ -5245,7 +5245,7 @@
 
   <script>
     var API_BASE = GCR_ADMIN_API || 'https://gcr-api-clean-fresh.vercel.app';
-    var GCR_API_BASE = 'https://gcr-api-gules.vercel.app';
+    var GCR_API_BASE = GCR_ADMIN_API || 'https://gcr-api-clean-fresh.vercel.app';
     var GCR_ADMIN_API = 'https://gcr-api-clean-fresh.vercel.app';
 
     function getAuthToken() {
@@ -5942,7 +5942,7 @@
       }
       el.innerHTML = entities.map(function(e) {
         var reviewUrl = 'https://cybercheck-links.vercel.app/reviews/' + e.id;
-        var webhookUrl = 'https://gcr-api-gules.vercel.app/api/reviews/webhook/pos?site_id=' + e.id;
+        var webhookUrl = GCR_ADMIN_API + '/api/reviews/webhook/pos?site_id=' + e.id;
         return '<div style="background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 14px;">' +
           '<div style="font-size:13px;font-weight:700;margin-bottom:8px;">' + escHtml(e.name) + '</div>' +
           '<div style="display:flex;flex-direction:column;gap:6px;">' +
@@ -6099,7 +6099,7 @@
         }
 
         var qrBase = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=';
-        var portalBase = 'https://gcr-api-gules.vercel.app/api/qr/partner-portal/';
+        var portalBase = GCR_ADMIN_API + '/api/qr/partner-portal/';
         var scanBase = 'https://cybercheck-links.vercel.app/q.html?c=';
 
         document.getElementById('rp-partners-body').innerHTML = partners.map(function(p) {

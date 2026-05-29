@@ -26,12 +26,10 @@ export default function MenuEditor() {
   const [newAreaName, setNewAreaName] = useState('');
   const [tab, setTab] = useState('menu');
 
-  // Menu (sections and items)
-  const [menuSections, setMenuSections] = useState([]);
+  // Current tab state (menu, drinks, specials, etc.)
   const [editingSection, setEditingSection] = useState(null);
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionTime, setNewSectionTime] = useState('');
-
   const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState({ section_id: '', name: '', description: '', price: '', images: [] });
 
@@ -112,44 +110,50 @@ export default function MenuEditor() {
     }
   };
 
-  const addSection = () => {
+  const getSectionField = (tabType) => tabType === 'menu' ? 'menu_sections' : tabType === 'drinks' ? 'drink_sections' : 'menu_sections';
+
+  const addSection = (tabType = tab) => {
     if (!newSectionName.trim() || !selectedAreaId) return;
-    const area = areas.find(a => a.id === selectedAreaId);
+    const field = getSectionField(tabType);
     const newSection = { id: Math.random().toString(36).substr(2, 9), name: newSectionName, time_range: newSectionTime, items: [] };
-    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: [...a.menu_sections, newSection] } : a));
+    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, [field]: [...a[field], newSection] } : a));
     setNewSectionName('');
     setNewSectionTime('');
   };
 
-  const deleteSection = (sectionId) => {
-    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.filter(s => s.id !== sectionId) } : a));
+  const deleteSection = (sectionId, tabType = tab) => {
+    const field = getSectionField(tabType);
+    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, [field]: a[field].filter(s => s.id !== sectionId) } : a));
   };
 
-  const addItem = () => {
+  const addItem = (tabType = tab) => {
     if (!newItem.name || !newItem.price || !newItem.section_id) {
       alert('Fill required fields');
       return;
     }
+    const field = getSectionField(tabType);
     const area = areas.find(a => a.id === selectedAreaId);
-    const section = area?.menu_sections.find(s => s.id === newItem.section_id);
+    const section = area?.[field].find(s => s.id === newItem.section_id);
     if (!section) return;
 
     const item = { id: Math.random().toString(36).substr(2, 9), ...newItem, images: newItem.images || [] };
-    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === newItem.section_id ? { ...s, items: [...s.items, item] } : s) } : a));
+    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, [field]: a[field].map(s => s.id === newItem.section_id ? { ...s, items: [...s.items, item] } : s) } : a));
     setNewItem({ section_id: '', name: '', description: '', price: '', images: [] });
   };
 
-  const updateItem = () => {
+  const updateItem = (tabType = tab) => {
     if (!editingItem.name || !editingItem.price) {
       alert('Fill required fields');
       return;
     }
-    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === editingItem.section_id ? { ...s, items: s.items.map(i => i.id === editingItem.id ? editingItem : i) } : s) } : a));
+    const field = getSectionField(tabType);
+    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, [field]: a[field].map(s => s.id === editingItem.section_id ? { ...s, items: s.items.map(i => i.id === editingItem.id ? editingItem : i) } : s) } : a));
     setEditingItem(null);
   };
 
-  const deleteItem = (sectionId, itemId) => {
-    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === sectionId ? { ...s, items: s.items.filter(i => i.id !== itemId) } : s) } : a));
+  const deleteItem = (sectionId, itemId, tabType = tab) => {
+    const field = getSectionField(tabType);
+    setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, [field]: a[field].map(s => s.id === sectionId ? { ...s, items: s.items.filter(i => i.id !== itemId) } : s) } : a));
   };
 
   const deleteImage = (itemId, imageIndex, isSectionItem = true) => {
@@ -333,7 +337,91 @@ export default function MenuEditor() {
               </>
             )}
 
-            {tab !== 'menu' && <p style={{color: '#64748b'}}>Other tabs coming soon...</p>}
+            {tab === 'drinks' && (
+              <>
+                <h2>Drink Sections</h2>
+                <div style={{display: 'flex', gap: 8, marginBottom: 20}}>
+                  <input type="text" placeholder="Section name (Cocktails, Beer, Wine, Coffee, etc.)" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
+                  <input type="text" placeholder="Time range (e.g. Happy Hour 4pm-7pm)" value={newSectionTime} onChange={(e) => setNewSectionTime(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
+                  <button onClick={() => addSection('drinks')} style={{padding: '10px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600}}>Add Section</button>
+                </div>
+
+                {selectedArea.drink_sections.map(section => (
+                  <div key={section.id} style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 20}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+                      <div>
+                        <h3 style={{margin: 0}}>{section.name}</h3>
+                        {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>{section.time_range}</p>}
+                      </div>
+                      <button onClick={() => deleteSection(section.id, 'drinks')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>
+                    </div>
+
+                    <div style={{background: '#0f172a', padding: 12, borderRadius: 6, marginBottom: 12}}>
+                      <h4 style={{margin: '0 0 12px 0'}}>Add Item</h4>
+                      <input type="text" placeholder="Item name" value={newItem.section_id === section.id ? newItem.name : ''} onChange={(e) => newItem.section_id === section.id && setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 8}} />
+                      <textarea placeholder="Description" value={newItem.section_id === section.id ? newItem.description : ''} onChange={(e) => newItem.section_id === section.id && setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 8, height: 60}} />
+                      <input type="text" placeholder="Price" value={newItem.section_id === section.id ? newItem.price : ''} onChange={(e) => newItem.section_id === section.id && setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 8}} />
+                      <button onClick={() => setNewItem({...newItem, section_id: section.id})} style={{width: '100%', padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', marginBottom: 8}}>Select This Section</button>
+                      <button onClick={() => fileInputRef.current?.click()} disabled={uploadingImage} style={{width: '100%', padding: 8, background: uploadingImage ? '#64748b' : '#1e293b', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: uploadingImage ? 'not-allowed' : 'pointer', marginBottom: 8}}>
+                        {uploadingImage ? 'Uploading...' : '+ Add Image'}
+                      </button>
+                      <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => handleImageUpload(e, newItem)} style={{display: 'none'}} />
+                      <div style={{display: 'flex', gap: 8, marginBottom: 8}}>
+                        {newItem.images.map((img, idx) => (
+                          <div key={idx} style={{position: 'relative', width: 60, height: 60}}>
+                            <img src={img.url} alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+                            <div style={{fontSize: 10, color: '#94a3b8', marginTop: 2}}>{img.label}</div>
+                            <button onClick={() => deleteImage(newItem.id, idx, false)} style={{position: 'absolute', top: -4, right: -4, background: '#dc2626', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 10}}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{display: 'flex', gap: 8}}>
+                        <select value={imageLabel} onChange={(e) => setImageLabel(e.target.value)} style={{flex: 1, padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                          <option>Grilled</option>
+                          <option>Blackened</option>
+                          <option>Fried</option>
+                          <option>Steamed</option>
+                          <option>Baked</option>
+                        </select>
+                        <button onClick={() => addItem('drinks')} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Save Item</button>
+                      </div>
+                    </div>
+
+                    {section.items.length > 0 && (
+                      <>
+                        <h4 style={{margin: '12px 0 8px 0'}}>Items</h4>
+                        {section.items.map(item => (
+                          <div key={item.id} style={{background: '#1e293b', padding: 12, borderRadius: 6, marginBottom: 8}}>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start'}}>
+                              <div style={{flex: 1}}>
+                                <h5 style={{margin: '0 0 4px 0'}}>{item.name}</h5>
+                                <p style={{margin: '0 0 4px 0', fontSize: 12, color: '#94a3b8'}}>{item.description}</p>
+                                <p style={{margin: 0, fontWeight: 600}}>{item.price}</p>
+                                {item.images.length > 0 && (
+                                  <div style={{display: 'flex', gap: 6, marginTop: 8}}>
+                                    {item.images.map((img, idx) => (
+                                      <div key={idx} style={{width: 40, height: 40, borderRadius: 4, overflow: 'hidden'}}>
+                                        <img src={img.url} alt="item" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{display: 'flex', gap: 6}}>
+                                <button onClick={() => setEditingItem(item)} style={{padding: '6px 10px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Edit</button>
+                                <button onClick={() => deleteItem(section.id, item.id, 'drinks')} style={{padding: '6px 10px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Delete</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+
+            {tab !== 'menu' && tab !== 'drinks' && <p style={{color: '#64748b'}}>Other tabs coming soon...</p>}
           </div>
         </>
       )}

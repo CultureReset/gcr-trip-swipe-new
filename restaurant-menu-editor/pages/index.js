@@ -110,7 +110,8 @@ export default function MenuEditor() {
       ]},
       { id: '8', name: 'From the Steamer', time_range: '', items: [
         { id: '8a', section_id: '8', name: 'Boiled Shrimp Dinner', description: 'Fresh local shrimp steamed with Old Bay. Served with new potatoes, corn, lemons, drawn butter, and hushpuppy.', price: '$24', images: [] },
-        { id: '8b', section_id: '8', name: 'Snow Crab Legs', description: 'Your choice of 1 lb or 2 lb steamed crab legs with Old Bay. Served with potatoes, corn, lemons, and drawn butter.', price: 'Market Price', images: [] }
+        { id: '8b', section_id: '8', name: 'Snow Crab Legs', description: 'Your choice of 1 lb or 2 lb steamed crab legs with Old Bay. Served with potatoes, corn, lemons, and drawn butter.', price: 'Market Price', images: [] },
+        { id: '8c', section_id: '8', name: 'St. Martin Platter', description: 'Feeding 2-3 people, this platter has a variety! It contains a 1 1/2 lb. of snow crab legs, a 1/2 lb. of steamed shrimp, 4oz. of fried crawfish tails, 4 new potatoes, 2 pieces of corn, hushpuppies, and Key West slaw. Served with drawn butter and lemons.', price: 'Market Price', images: [] }
       ]},
       { id: '9', name: 'Desserts', time_range: '', items: [
         { id: '9a', section_id: '9', name: 'Peanut Butter Pie', description: 'Creamy peanut butter pie drizzled with chocolate syrup with chocolate cracker crust.', price: '$7.99', images: [] },

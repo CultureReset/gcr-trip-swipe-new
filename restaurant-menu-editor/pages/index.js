@@ -72,7 +72,8 @@ export default function MenuEditor() {
       { id: '2', name: 'Salads', time_range: '', items: [
         { id: '2a', section_id: '2', name: 'The Grill Salad', description: 'Fresh tossed greens with grilled chicken, craisins, pineapple, parmesan cheese, and toasted almonds.', price: '$17', images: [] },
         { id: '2b', section_id: '2', name: 'Mango Shrimp Salad', description: 'Fresh greens with red onions, cherry tomatoes, boiled egg, parmesan cheese topped with mango BBQ shrimp.', price: '$17', images: [] },
-        { id: '2c', section_id: '2', name: 'Tender Salad', description: 'Fresh greens with red onions, cherry tomatoes, boiled egg, parmesan cheese topped with crispy fried chicken.', price: '$16', images: [] }
+        { id: '2c', section_id: '2', name: 'Tender Salad', description: 'Fresh greens with red onions, cherry tomatoes, boiled egg, parmesan cheese topped with crispy fried chicken.', price: '$16', images: [] },
+        { id: '2d', section_id: '2', name: 'Side Salad', description: 'Fresh tossed greens with cucumber, cherry tomatoes, shredded cheese, and sliced onions.', price: '$5', images: [] }
       ]},
       { id: '3', name: 'From the Grill', time_range: '', items: [
         { id: '3a', section_id: '3', name: 'Islamorada Chicken', description: 'Grilled chicken breast marinated with island flavors. Served with Caribbean rice, steamed veggies, and grilled pineapple.', price: '$20', images: [] },
@@ -89,8 +90,15 @@ export default function MenuEditor() {
         { id: '4c', section_id: '4', name: 'Grouper Parmesan', description: 'Baked grouper topped with fresh parmesan. Served with mashed potatoes and steamed veggies.', price: '$24', images: [] },
         { id: '4d', section_id: '4', name: 'Gulf Island Ya-Ya', description: 'Shrimp, chicken, Andouille sausage, peppers, onions, and tomatoes in garlic cheddar sauce on Caribbean rice. Served with garlic bread.', price: '$23', images: [] },
         { id: '4e', section_id: '4', name: 'Gulf Island Catch', description: 'Voted one of the BEST dishes on the island. Lightly pan-fried fish topped with creamy shrimp & andouille sausage sauce. Served with steamed veggies.', price: '$22', images: [] },
-        { id: '4f', section_id: '4', name: 'Coconut Shrimp', description: 'Homemade with crispy coconut batter. Served with homemade Jezabel sauce.', price: '$14', images: [] },
-        { id: '4g', section_id: '4', name: 'Buffalo Shrimp', description: 'Hearty portion of popcorn shrimp tossed in honey BBQ, mango BBQ, or hot sauce.', price: '$14', images: [] }
+        { id: '4f', section_id: '4', name: 'Roasted Cheddar & Artichoke Dip', description: 'Creamy dip served with warm tortilla chips.', price: '$12', images: [] },
+        { id: '4g', section_id: '4', name: 'Coconut Shrimp', description: 'Homemade with crispy coconut batter. Served with homemade Jezabel sauce.', price: '$14', images: [] },
+        { id: '4h', section_id: '4', name: 'Boiled Shrimp', description: 'A 1/2 pound of fresh Gulf shrimp, served with cocktail sauce.', price: '$14', images: [] },
+        { id: '4i', section_id: '4', name: 'Fried Dill Pickle Chips', description: 'Hand cut pickles, deep fried, and tasty! Served with ranch.', price: '$10', images: [] },
+        { id: '4j', section_id: '4', name: 'Buffalo Shrimp', description: 'Hearty portion of popcorn shrimp tossed in your choice of: Honey BBQ, Mango BBQ, or Hot.', price: '$14', images: [] },
+        { id: '4k', section_id: '4', name: 'Baked Crab Stuffed Mushrooms', description: 'Our signature crab dressing with our garlic cream sauce.', price: '$14', images: [] },
+        { id: '4l', section_id: '4', name: 'Cheesy Bacon Fries', description: 'Melted cheese and crispy bacon pieces atop our fries. Served with ranch.', price: '$12', images: [] },
+        { id: '4m', section_id: '4', name: 'Blackened Shrimp Queso', description: 'Blackened shrimp mixed in creamy queso dip. Served with tortilla chips.', price: '$14', images: [] },
+        { id: '4n', section_id: '4', name: 'Louisiana Popcorn', description: 'Spicy fried crawfish tails served with mojo dipping sauce.', price: '$14', images: [] }
       ]},
       { id: '5', name: 'Sandwiches', time_range: '', items: [
         { id: '5a', section_id: '5', name: "Po'Boys", description: 'Shrimp, crawfish, or grouper served on French loaf with lettuce, tomato, and onion.', price: '$17', images: [] },

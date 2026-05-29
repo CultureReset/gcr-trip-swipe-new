@@ -34,6 +34,7 @@ export default function MenuEditor() {
   const [newItem, setNewItem] = useState({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true });
   const [editingItemId, setEditingItemId] = useState(null);
   const [showGallerySelector, setShowGallerySelector] = useState(null);
+  const [expandedAddForm, setExpandedAddForm] = useState(null);
 
   // Image upload
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -378,8 +379,12 @@ export default function MenuEditor() {
   );
 
   // ItemForm - form for adding/editing items
-  const ItemForm = ({ isSectionItem = false, targetField = null, onAdd, onUpdate, showDate = false, showTime = false, showLocation = false }) => (
-    <div style={{background: '#0f172a', padding: 12, borderRadius: 6, marginBottom: 12}}>
+  const ItemForm = ({ isSectionItem = false, targetField = null, onAdd, onUpdate, showDate = false, showTime = false, showLocation = false, sectionId = null }) => {
+    const isExpanded = editingItem || expandedAddForm === sectionId;
+    return (
+    <div>
+      {!isExpanded && <button onClick={() => setExpandedAddForm(sectionId)} style={{width: '100%', padding: 10, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', marginBottom: 12, fontWeight: 600}}>+ Add Item</button>}
+      {isExpanded && <div style={{background: '#0f172a', padding: 12, borderRadius: 6, marginBottom: 12}}>
       <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Item' : 'Add Item'}</h4>
       <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 8}} />
       <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 8, height: 60}} />
@@ -419,8 +424,11 @@ export default function MenuEditor() {
         </button>
       </div>
       {editingItem && <button onClick={() => setEditingItem(null)} style={{width: '100%', marginTop: 8, padding: 8, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
+      {!editingItem && <button onClick={() => setExpandedAddForm(null)} style={{width: '100%', marginTop: 8, padding: 8, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Collapse</button>}
+    </div>}
     </div>
   );
+  };
 
   if (!pinEntered) {
     return (
@@ -492,7 +500,7 @@ export default function MenuEditor() {
                       <button onClick={() => deleteSection(section.id, 'menu')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>
                     </div>
 
-                    <ItemForm isSectionItem={true} onAdd={() => addSectionItem('menu')} onUpdate={() => updateSectionItem('menu')} />
+                    <ItemForm isSectionItem={true} sectionId={section.id} onAdd={() => addSectionItem('menu')} onUpdate={() => updateSectionItem('menu')} />
 
                     {section.items.length > 0 && (
                       <>
@@ -573,7 +581,7 @@ export default function MenuEditor() {
                       <button onClick={() => deleteSection(section.id, 'drinks')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>
                     </div>
 
-                    <ItemForm isSectionItem={true} onAdd={() => addSectionItem('drinks')} onUpdate={() => updateSectionItem('drinks')} />
+                    <ItemForm isSectionItem={true} sectionId={section.id} onAdd={() => addSectionItem('drinks')} onUpdate={() => updateSectionItem('drinks')} />
 
                     {section.items.length > 0 && (
                       <>

@@ -646,9 +646,44 @@ export default function MenuEditor() {
             {tab === 'specials' && (
               <>
                 <h2>Specials</h2>
-                <ItemForm targetField="specials" onAdd={() => addFlatItem('specials')} onUpdate={() => updateFlatItem('specials')} />
+                {!editingItem && !expandedAddForm && <button onClick={() => setExpandedAddForm('specials')} style={{width: '100%', padding: 12, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 16, fontWeight: 600}}>+ Add Special</button>}
+                {(editingItem || expandedAddForm === 'specials') && (
+                  <div style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 16}}>
+                    <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Special' : 'Add Special'}</h4>
+                    <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
+                    <input type="text" placeholder="Price" value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <label style={{display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', marginBottom: 12}}>
+                      <input type="checkbox" checked={editingItem ? editingItem.active : newItem.active} onChange={(e) => editingItem ? setEditingItem({...editingItem, active: e.target.checked}) : setNewItem({...newItem, active: e.target.checked})} />
+                      Active
+                    </label>
+                    <button onClick={() => fileInputRef.current?.click()} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer', marginBottom: 10}}>📤 Add Image</button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{display: 'none'}} />
+                    <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                      {(editingItem ? editingItem.images : newItem.images).map((img, idx) => (
+                        <div key={idx} style={{position: 'relative', width: 50, height: 50}}>
+                          <img src={img.url} alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+                          <button onClick={() => deleteImage(idx, !!editingItem)} style={{position: 'absolute', top: -4, right: -4, background: '#dc2626', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display: 'flex', gap: 8}}>
+                      <select value={imageLabel} onChange={(e) => setImageLabel(e.target.value)} style={{flex: 1, padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                        <option>Grilled</option>
+                        <option>Blackened</option>
+                        <option>Fried</option>
+                        <option>Steamed</option>
+                        <option>Baked</option>
+                      </select>
+                      <button onClick={editingItem ? () => { updateFlatItem('specials'); setExpandedAddForm(null); } : () => { addFlatItem('specials'); setExpandedAddForm(null); }} style={{flex: 1, padding: 10, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>
+                        {editingItem ? 'Update' : 'Save'}
+                      </button>
+                    </div>
+                    {(editingItem || expandedAddForm) && <button onClick={() => { setEditingItem(null); setExpandedAddForm(null); }} style={{width: '100%', marginTop: 10, padding: 10, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
+                  </div>
+                )}
                 {selectedArea.specials.length > 0 && <ItemRenderer items={selectedArea.specials} targetField="specials" />}
-                {selectedArea.specials.length === 0 && !editingItem && <p style={{color: '#64748b'}}>No specials yet</p>}
+                {selectedArea.specials.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No specials yet</p>}
               </>
             )}
 
@@ -656,9 +691,40 @@ export default function MenuEditor() {
             {tab === 'sides' && (
               <>
                 <h2>Sides & Add-ons</h2>
-                <ItemForm targetField="sides" onAdd={() => addFlatItem('sides')} onUpdate={() => updateFlatItem('sides')} />
+                {!editingItem && !expandedAddForm && <button onClick={() => setExpandedAddForm('sides')} style={{width: '100%', padding: 12, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 16, fontWeight: 600}}>+ Add Item</button>}
+                {(editingItem || expandedAddForm === 'sides') && (
+                  <div style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 16}}>
+                    <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Item' : 'Add Item'}</h4>
+                    <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
+                    <input type="text" placeholder="Price" value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <button onClick={() => fileInputRef.current?.click()} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer', marginBottom: 10}}>📤 Add Image</button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{display: 'none'}} />
+                    <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                      {(editingItem ? editingItem.images : newItem.images).map((img, idx) => (
+                        <div key={idx} style={{position: 'relative', width: 50, height: 50}}>
+                          <img src={img.url} alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+                          <button onClick={() => deleteImage(idx, !!editingItem)} style={{position: 'absolute', top: -4, right: -4, background: '#dc2626', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display: 'flex', gap: 8}}>
+                      <select value={imageLabel} onChange={(e) => setImageLabel(e.target.value)} style={{flex: 1, padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                        <option>Grilled</option>
+                        <option>Blackened</option>
+                        <option>Fried</option>
+                        <option>Steamed</option>
+                        <option>Baked</option>
+                      </select>
+                      <button onClick={editingItem ? () => { updateFlatItem('sides'); setExpandedAddForm(null); } : () => { addFlatItem('sides'); setExpandedAddForm(null); }} style={{flex: 1, padding: 10, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>
+                        {editingItem ? 'Update' : 'Save'}
+                      </button>
+                    </div>
+                    {(editingItem || expandedAddForm) && <button onClick={() => { setEditingItem(null); setExpandedAddForm(null); }} style={{width: '100%', marginTop: 10, padding: 10, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
+                  </div>
+                )}
                 {sides.length > 0 && <ItemRenderer items={sides} targetField="sides" />}
-                {sides.length === 0 && !editingItem && <p style={{color: '#64748b'}}>No sides yet</p>}
+                {sides.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No sides yet</p>}
               </>
             )}
 
@@ -701,9 +767,46 @@ export default function MenuEditor() {
             {tab === 'events' && (
               <>
                 <h2>Events</h2>
-                <ItemForm targetField="events" showDate={true} showTime={true} showLocation={true} onAdd={() => addFlatItem('events')} onUpdate={() => updateFlatItem('events')} />
+                {!editingItem && !expandedAddForm && <button onClick={() => setExpandedAddForm('events')} style={{width: '100%', padding: 12, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 16, fontWeight: 600}}>+ Add Event</button>}
+                {(editingItem || expandedAddForm === 'events') && (
+                  <div style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 16}}>
+                    <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Event' : 'Add Event'}</h4>
+                    <input type="text" placeholder="Event name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
+                    <input type="date" value={editingItem ? editingItem.date : newItem.date} onChange={(e) => editingItem ? setEditingItem({...editingItem, date: e.target.value}) : setNewItem({...newItem, date: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <input type="time" value={editingItem ? editingItem.time : newItem.time} onChange={(e) => editingItem ? setEditingItem({...editingItem, time: e.target.value}) : setNewItem({...newItem, time: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <input type="text" placeholder="Location" value={editingItem ? editingItem.location : newItem.location} onChange={(e) => editingItem ? setEditingItem({...editingItem, location: e.target.value}) : setNewItem({...newItem, location: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <label style={{display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', marginBottom: 12}}>
+                      <input type="checkbox" checked={editingItem ? editingItem.active : newItem.active} onChange={(e) => editingItem ? setEditingItem({...editingItem, active: e.target.checked}) : setNewItem({...newItem, active: e.target.checked})} />
+                      Active
+                    </label>
+                    <button onClick={() => fileInputRef.current?.click()} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer', marginBottom: 10}}>📤 Add Image</button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{display: 'none'}} />
+                    <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                      {(editingItem ? editingItem.images : newItem.images).map((img, idx) => (
+                        <div key={idx} style={{position: 'relative', width: 50, height: 50}}>
+                          <img src={img.url} alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+                          <button onClick={() => deleteImage(idx, !!editingItem)} style={{position: 'absolute', top: -4, right: -4, background: '#dc2626', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display: 'flex', gap: 8}}>
+                      <select value={imageLabel} onChange={(e) => setImageLabel(e.target.value)} style={{flex: 1, padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                        <option>Grilled</option>
+                        <option>Blackened</option>
+                        <option>Fried</option>
+                        <option>Steamed</option>
+                        <option>Baked</option>
+                      </select>
+                      <button onClick={editingItem ? () => { updateFlatItem('events'); setExpandedAddForm(null); } : () => { addFlatItem('events'); setExpandedAddForm(null); }} style={{flex: 1, padding: 10, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>
+                        {editingItem ? 'Update' : 'Save'}
+                      </button>
+                    </div>
+                    {(editingItem || expandedAddForm) && <button onClick={() => { setEditingItem(null); setExpandedAddForm(null); }} style={{width: '100%', marginTop: 10, padding: 10, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
+                  </div>
+                )}
                 {selectedArea.events.length > 0 && <ItemRenderer items={selectedArea.events} targetField="events" />}
-                {selectedArea.events.length === 0 && !editingItem && <p style={{color: '#64748b'}}>No events yet</p>}
+                {selectedArea.events.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No events yet</p>}
               </>
             )}
 
@@ -726,9 +829,44 @@ export default function MenuEditor() {
             {tab === 'dailyFeatures' && (
               <>
                 <h2>Daily Features</h2>
-                <ItemForm targetField="dailyFeatures" onAdd={() => addFlatItem('dailyFeatures')} onUpdate={() => updateFlatItem('dailyFeatures')} />
+                {!editingItem && !expandedAddForm && <button onClick={() => setExpandedAddForm('dailyFeatures')} style={{width: '100%', padding: 12, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 16, fontWeight: 600}}>+ Add Feature</button>}
+                {(editingItem || expandedAddForm === 'dailyFeatures') && (
+                  <div style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 16}}>
+                    <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Feature' : 'Add Feature'}</h4>
+                    <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
+                    <input type="text" placeholder="Price" value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <label style={{display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', marginBottom: 12}}>
+                      <input type="checkbox" checked={editingItem ? editingItem.active : newItem.active} onChange={(e) => editingItem ? setEditingItem({...editingItem, active: e.target.checked}) : setNewItem({...newItem, active: e.target.checked})} />
+                      Active
+                    </label>
+                    <button onClick={() => fileInputRef.current?.click()} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer', marginBottom: 10}}>📤 Add Image</button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{display: 'none'}} />
+                    <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                      {(editingItem ? editingItem.images : newItem.images).map((img, idx) => (
+                        <div key={idx} style={{position: 'relative', width: 50, height: 50}}>
+                          <img src={img.url} alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+                          <button onClick={() => deleteImage(idx, !!editingItem)} style={{position: 'absolute', top: -4, right: -4, background: '#dc2626', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display: 'flex', gap: 8}}>
+                      <select value={imageLabel} onChange={(e) => setImageLabel(e.target.value)} style={{flex: 1, padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                        <option>Grilled</option>
+                        <option>Blackened</option>
+                        <option>Fried</option>
+                        <option>Steamed</option>
+                        <option>Baked</option>
+                      </select>
+                      <button onClick={editingItem ? () => { updateFlatItem('dailyFeatures'); setExpandedAddForm(null); } : () => { addFlatItem('dailyFeatures'); setExpandedAddForm(null); }} style={{flex: 1, padding: 10, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>
+                        {editingItem ? 'Update' : 'Save'}
+                      </button>
+                    </div>
+                    {(editingItem || expandedAddForm) && <button onClick={() => { setEditingItem(null); setExpandedAddForm(null); }} style={{width: '100%', marginTop: 10, padding: 10, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
+                  </div>
+                )}
                 {dailyFeatures.length > 0 && <ItemRenderer items={dailyFeatures} targetField="dailyFeatures" />}
-                {dailyFeatures.length === 0 && !editingItem && <p style={{color: '#64748b'}}>No daily features yet</p>}
+                {dailyFeatures.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No daily features yet</p>}
               </>
             )}
 

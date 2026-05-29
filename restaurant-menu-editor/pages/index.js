@@ -627,7 +627,7 @@ export default function MenuEditor() {
                           </div>
                           <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
                             <button onClick={() => toggleRotatingActive(item.id)} style={{padding: '6px 12px', background: item.active ? '#22c55e' : '#64748b', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 600}}>{item.active ? '✓ Active' : 'Inactive'}</button>
-                            <button onClick={() => setRotatingItem(item); setShowAddRotating(true)} style={{padding: '6px 10px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Edit</button>
+                            <button onClick={() => { setRotatingItem(item); setShowAddRotating(true); }} style={{padding: '6px 10px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Edit</button>
                             <button onClick={() => deleteRotatingItem(item.id)} style={{padding: '6px 10px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Delete</button>
                           </div>
                         </div>

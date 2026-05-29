@@ -31,6 +31,10 @@ export default function MenuEditor() {
   const [editingSection, setEditingSection] = useState(null);
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionTime, setNewSectionTime] = useState('');
+  const [sectionTimeStart, setSectionTimeStart] = useState('11:00');
+  const [sectionTimeEnd, setSectionTimeEnd] = useState('22:00');
+  const [eventTimeStart, setEventTimeStart] = useState('18:00');
+  const [eventTimeEnd, setEventTimeEnd] = useState('22:00');
   const [editingItem, setEditingItem] = useState(null);
   const [newItem, setNewItem] = useState({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', type: 'side', images: [], active: true });
   const [editingItemId, setEditingItemId] = useState(null);
@@ -46,6 +50,19 @@ export default function MenuEditor() {
   const galleryInputRef = useRef(null);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  // Generate time options (12:00 AM to 11:30 PM in 30-minute intervals)
+  const timeOptions = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let min = 0; min < 60; min += 30) {
+      const period = hour < 12 ? 'AM' : 'PM';
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      const displayMin = min === 0 ? '00' : '30';
+      const value = `${String(hour).padStart(2, '0')}:${displayMin}`;
+      const label = `${displayHour}:${displayMin} ${period}`;
+      timeOptions.push({ value, label });
+    }
+  }
 
   // Initialize
   useEffect(() => {
@@ -544,8 +561,15 @@ export default function MenuEditor() {
                 <h2>Menu Sections</h2>
                 <div style={{display: 'flex', gap: 8, marginBottom: 20}}>
                   <input type="text" placeholder="Section name (Seafood, Breakfast, etc.)" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
-                  <input type="text" placeholder="Time range (e.g. 11am-3pm)" value={newSectionTime} onChange={(e) => setNewSectionTime(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
-                  <button onClick={() => addSection('menu')} style={{padding: '10px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600}}>Add Section</button>
+                  <select value={sectionTimeStart} onChange={(e) => setSectionTimeStart(e.target.value)} style={{padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}}>
+                    <option value="">Start Time</option>
+                    {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                  <select value={sectionTimeEnd} onChange={(e) => setSectionTimeEnd(e.target.value)} style={{padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}}>
+                    <option value="">End Time</option>
+                    {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                  <button onClick={() => { const range = sectionTimeStart && sectionTimeEnd ? `${sectionTimeStart}-${sectionTimeEnd}` : ''; setNewSectionTime(range); addSection('menu'); setSectionTimeStart('11:00'); setSectionTimeEnd('22:00'); }} style={{padding: '10px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600}}>Add Section</button>
                 </div>
 
                 {selectedArea.menu_sections.map(section => (
@@ -629,8 +653,15 @@ export default function MenuEditor() {
                 <h2>Drink Sections</h2>
                 <div style={{display: 'flex', gap: 8, marginBottom: 20}}>
                   <input type="text" placeholder="Section name (Cocktails, Beer, Wine, etc.)" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
-                  <input type="text" placeholder="Time range (e.g. Happy Hour 4pm-7pm)" value={newSectionTime} onChange={(e) => setNewSectionTime(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
-                  <button onClick={() => addSection('drinks')} style={{padding: '10px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600}}>Add Section</button>
+                  <select value={sectionTimeStart} onChange={(e) => setSectionTimeStart(e.target.value)} style={{padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}}>
+                    <option value="">Start Time</option>
+                    {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                  <select value={sectionTimeEnd} onChange={(e) => setSectionTimeEnd(e.target.value)} style={{padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}}>
+                    <option value="">End Time</option>
+                    {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                  <button onClick={() => { const range = sectionTimeStart && sectionTimeEnd ? `${sectionTimeStart}-${sectionTimeEnd}` : ''; setNewSectionTime(range); addSection('drinks'); setSectionTimeStart('11:00'); setSectionTimeEnd('22:00'); }} style={{padding: '10px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600}}>Add Section</button>
                 </div>
 
                 {selectedArea.drink_sections.map(section => (
@@ -865,7 +896,10 @@ export default function MenuEditor() {
                     <input type="text" placeholder="Event name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
                     <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
                     <input type="date" value={editingItem ? editingItem.date : newItem.date} onChange={(e) => editingItem ? setEditingItem({...editingItem, date: e.target.value}) : setNewItem({...newItem, date: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
-                    <input type="time" value={editingItem ? editingItem.time : newItem.time} onChange={(e) => editingItem ? setEditingItem({...editingItem, time: e.target.value}) : setNewItem({...newItem, time: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <select value={editingItem ? editingItem.time : newItem.time} onChange={(e) => editingItem ? setEditingItem({...editingItem, time: e.target.value}) : setNewItem({...newItem, time: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}}>
+                      <option value="">Select Event Time</option>
+                      {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                    </select>
                     <input type="text" placeholder="Location" value={editingItem ? editingItem.location : newItem.location} onChange={(e) => editingItem ? setEditingItem({...editingItem, location: e.target.value}) : setNewItem({...newItem, location: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
                     <label style={{display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', marginBottom: 12}}>
                       <input type="checkbox" checked={editingItem ? editingItem.active : newItem.active} onChange={(e) => editingItem ? setEditingItem({...editingItem, active: e.target.checked}) : setNewItem({...newItem, active: e.target.checked})} />
@@ -912,7 +946,20 @@ export default function MenuEditor() {
                     <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
                     <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
                     <input type="text" placeholder="Price (e.g. $5 or 50% off)" value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
-                    <input type="text" placeholder="Time range (e.g. 4pm-7pm)" value={editingItem ? editingItem.time : newItem.time} onChange={(e) => editingItem ? setEditingItem({...editingItem, time: e.target.value}) : setNewItem({...newItem, time: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                      <div style={{flex: 1}}>
+                        <label style={{fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4}}>Start Time</label>
+                        <select value={editingItem ? editingItem.time?.split('-')[0] || eventTimeStart : eventTimeStart} onChange={(e) => { const endTime = editingItem?.time?.split('-')[1] || eventTimeEnd; if (editingItem) { setEditingItem({...editingItem, time: `${e.target.value}-${endTime}`}); } else { setEventTimeStart(e.target.value); } }} style={{width: '100%', padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                          {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                      </div>
+                      <div style={{flex: 1}}>
+                        <label style={{fontSize: 12, color: '#94a3b8', display: 'block', marginBottom: 4}}>End Time</label>
+                        <select value={editingItem ? editingItem.time?.split('-')[1] || eventTimeEnd : eventTimeEnd} onChange={(e) => { const startTime = editingItem?.time?.split('-')[0] || eventTimeStart; if (editingItem) { setEditingItem({...editingItem, time: `${startTime}-${e.target.value}`}); } else { setEventTimeEnd(e.target.value); } }} style={{width: '100%', padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                          {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
                     <input type="text" placeholder="Days (e.g. Mon-Fri)" value={editingItem ? editingItem.date : newItem.date} onChange={(e) => editingItem ? setEditingItem({...editingItem, date: e.target.value}) : setNewItem({...newItem, date: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
                     <label style={{display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', marginBottom: 12}}>
                       <input type="checkbox" checked={editingItem ? editingItem.active : newItem.active} onChange={(e) => editingItem ? setEditingItem({...editingItem, active: e.target.checked}) : setNewItem({...newItem, active: e.target.checked})} />

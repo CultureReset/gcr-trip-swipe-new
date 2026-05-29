@@ -31,7 +31,7 @@ export default function MenuEditor() {
   const [newSectionName, setNewSectionName] = useState('');
   const [newSectionTime, setNewSectionTime] = useState('');
   const [editingItem, setEditingItem] = useState(null);
-  const [newItem, setNewItem] = useState({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true });
+  const [newItem, setNewItem] = useState({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', type: 'side', images: [], active: true });
   const [editingItemId, setEditingItemId] = useState(null);
   const [showGallerySelector, setShowGallerySelector] = useState(null);
   const [expandedAddForm, setExpandedAddForm] = useState(null);
@@ -183,16 +183,20 @@ export default function MenuEditor() {
 
     // Sides & Add-ons
     const sidesData = [
-      { id: 's1', name: 'Caribbean Rice', description: 'Seasoned rice with tropical spices', price: '$3', images: [] },
-      { id: 's2', name: 'Steamed Vegetables', description: 'Seasonal mixed vegetables', price: '$3', images: [] },
-      { id: 's3', name: 'Gulf Island Potatoes', description: 'Roasted with herbs and garlic', price: '$4', images: [] },
-      { id: 's4', name: 'French Fries', description: 'Crispy golden fries', price: '$3', images: [] },
-      { id: 's5', name: 'Grilled Pineapple', description: 'Sweet caramelized pineapple', price: '$4', images: [] },
-      { id: 's6', name: 'Key West Slaw', description: 'Fresh coleslaw with lime dressing', price: '$3', images: [] },
-      { id: 's7', name: 'Garlic Bread', description: 'Toasted with fresh garlic', price: '$4', images: [] },
-      { id: 's8', name: 'Mac & Cheese', description: 'Creamy three-cheese blend', price: '$5', images: [] },
-      { id: 's9', name: 'Black Beans & Rice', description: 'Traditional island side', price: '$3', images: [] },
-      { id: 's10', name: 'Mashed Potatoes', description: 'Creamy with butter', price: '$3', images: [] }
+      // Sides (base items with standalone prices)
+      { id: 's1', name: 'Caribbean Rice', description: 'Seasoned rice with tropical spices', price: '$3', type: 'side', images: [] },
+      { id: 's2', name: 'Steamed Vegetables', description: 'Seasonal mixed vegetables', price: '$3', type: 'side', images: [] },
+      { id: 's3', name: 'Gulf Island Potatoes', description: 'Roasted with herbs and garlic', price: '$4', type: 'side', images: [] },
+      { id: 's4', name: 'French Fries', description: 'Crispy golden fries', price: '$3', type: 'side', images: [] },
+      { id: 's5', name: 'Grilled Pineapple', description: 'Sweet caramelized pineapple', price: '$4', type: 'side', images: [] },
+      { id: 's6', name: 'Key West Slaw', description: 'Fresh coleslaw with lime dressing', price: '$3', type: 'side', images: [] },
+      // Add-ons (additional items with surcharge prices)
+      { id: 'a1', name: 'Extra Shrimp', description: 'Add grilled shrimp to any dish', price: '+$3.50', type: 'addon', images: [] },
+      { id: 'a2', name: 'Grouper Fillet', description: 'Add fresh grouper', price: '+$4.00', type: 'addon', images: [] },
+      { id: 'a3', name: 'Crabmeat', description: 'Add lump crab', price: '+$2.50', type: 'addon', images: [] },
+      { id: 'a4', name: 'Bacon', description: 'Add crispy bacon', price: '+$1.50', type: 'addon', images: [] },
+      { id: 'a5', name: 'Grilled Chicken', description: 'Add grilled chicken breast', price: '+$2.00', type: 'addon', images: [] },
+      { id: 'a6', name: 'Extra Cheese', description: 'Add extra melted cheese', price: '+$1.00', type: 'addon', images: [] }
     ];
 
     // Daily Features (Catch of the Day, Soup of the Day, etc.)
@@ -293,7 +297,7 @@ export default function MenuEditor() {
 
     const item = { id: Math.random().toString(36).substr(2, 9), ...newItem, images: newItem.images || [] };
     setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, [field]: a[field].map(s => s.id === newItem.section_id ? { ...s, items: [...s.items, item] } : s) } : a));
-    setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true });
+    setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', type: 'side', images: [], active: true });
   };
 
   const updateSectionItem = (tabType = tab) => {
@@ -331,7 +335,7 @@ export default function MenuEditor() {
       setSides([...sides, item]);
     }
 
-    setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true });
+    setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', type: 'side', images: [], active: true });
   };
 
   const updateFlatItem = (targetField) => {
@@ -773,9 +777,18 @@ export default function MenuEditor() {
                 {(editingItem || expandedAddForm === 'sides') && (
                   <div style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 16}}>
                     <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Item' : 'Add Item'}</h4>
+                    <div style={{display: 'flex', gap: 10, marginBottom: 10}}>
+                      <div style={{flex: 1}}>
+                        <label style={{fontSize: 12, color: '#94a3b8'}}>Type</label>
+                        <select value={editingItem ? editingItem.type : newItem.type || 'side'} onChange={(e) => editingItem ? setEditingItem({...editingItem, type: e.target.value}) : setNewItem({...newItem, type: e.target.value})} style={{width: '100%', padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                          <option value="side">Side</option>
+                          <option value="addon">Add-on</option>
+                        </select>
+                      </div>
+                    </div>
                     <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
                     <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
-                    <input type="text" placeholder="Price" value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <input type="text" placeholder={editingItem?.type === 'addon' || newItem.type === 'addon' ? "Price (e.g. +$1.50)" : "Price (e.g. $3.00)"} value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
                     <button onClick={() => fileInputRef.current?.click()} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer', marginBottom: 10}}>📤 Add Image</button>
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{display: 'none'}} />
                     <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
@@ -801,7 +814,23 @@ export default function MenuEditor() {
                     {(editingItem || expandedAddForm) && <button onClick={() => { setEditingItem(null); setExpandedAddForm(null); }} style={{width: '100%', marginTop: 10, padding: 10, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
                   </div>
                 )}
-                {sides.length > 0 && <ItemRenderer items={sides} targetField="sides" />}
+
+                {sides.length > 0 && (
+                  <>
+                    {sides.filter(item => item.type === 'side').length > 0 && (
+                      <div style={{marginBottom: 24}}>
+                        <h3 style={{color: '#0b7a75', marginBottom: 12}}>Sides</h3>
+                        <ItemRenderer items={sides.filter(item => item.type === 'side')} targetField="sides" />
+                      </div>
+                    )}
+                    {sides.filter(item => item.type === 'addon').length > 0 && (
+                      <div>
+                        <h3 style={{color: '#7c3aed', marginBottom: 12}}>Add-ons</h3>
+                        <ItemRenderer items={sides.filter(item => item.type === 'addon')} targetField="sides" />
+                      </div>
+                    )}
+                  </>
+                )}
                 {sides.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No sides yet</p>}
               </>
             )}

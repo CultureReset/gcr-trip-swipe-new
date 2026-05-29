@@ -25,6 +25,10 @@ export default function MenuEditor() {
   const [selectedAreaId, setSelectedAreaId] = useState(null);
   const [newAreaName, setNewAreaName] = useState('');
   const [tab, setTab] = useState('menu');
+
+  // Rotating items (Catch of the Day, Soup of the Day, etc)
+  const [showAddRotating, setShowAddRotating] = useState(false);
+  const [rotatingItem, setRotatingItem] = useState({ name: '', description: '', price: '', images: [], active: true });
   const [happyHour, setHappyHour] = useState([]);
 
   // Current tab state (reusable across all tabs)
@@ -207,7 +211,8 @@ export default function MenuEditor() {
       drink_sections: drinkSections,
       specials: [],
       daily_specials: days.reduce((acc, day) => ({ ...acc, [day]: null }), {}),
-      events: []
+      events: [],
+      rotating_items: []
     };
 
     setAreas([newArea]);
@@ -234,26 +239,22 @@ export default function MenuEditor() {
 
     try {
       setUploadingImage(true);
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('label', imageLabel);
 
-      const res = await fetch(`${API_URL}/api/menu-editor/${slug}/upload`, {
-        method: 'POST',
-        headers: { 'x-menu-token': token },
-        body: formData
-      });
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
+      // Convert to Base64 (local storage for testing)
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target.result;
+        const newImage = { url: base64, label: imageLabel };
 
-      const newImage = { url: data.url, label: imageLabel };
-      if (editingItem) {
-        setEditingItem({ ...editingItem, images: [...(editingItem.images || []), newImage] });
-      } else {
-        setNewItem({ ...newItem, images: [...newItem.images, newImage] });
-      }
-      setImageLabel('Grilled');
-      setUploadingImage(false);
+        if (editingItem) {
+          setEditingItem({ ...editingItem, images: [...(editingItem.images || []), newImage] });
+        } else {
+          setNewItem({ ...newItem, images: [...newItem.images, newImage] });
+        }
+        setImageLabel('Grilled');
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       alert('Error uploading image: ' + err.message);
       setUploadingImage(false);
@@ -379,7 +380,10 @@ export default function MenuEditor() {
   };
 
   const addArea = () => {
-    if (!newAreaName.trim()) return;
+    if (!newAreaName.trim()) {
+      alert('Please enter an area name (e.g., Outdoor Bar, Patio, Upstairs)');
+      return;
+    }
     const newAreaId = Math.random().toString(36).substr(2, 9);
     setAreas([...areas, {
       id: newAreaId,
@@ -389,10 +393,39 @@ export default function MenuEditor() {
       drink_sections: [],
       specials: [],
       daily_specials: days.reduce((acc, day) => ({ ...acc, [day]: null }), {}),
-      events: []
+      events: [],
+      rotating_items: []
     }]);
     setSelectedAreaId(newAreaId);
     setNewAreaName('');
+  };
+
+  const addRotatingItem = () => {
+    if (!rotatingItem.name.trim()) {
+      alert('Enter item name');
+      return;
+    }
+    const newId = Math.random().toString(36).substr(2, 9);
+    setAreas(areas.map(a => a.id === selectedAreaId ? {
+      ...a,
+      rotating_items: [...a.rotating_items, { id: newId, ...rotatingItem }]
+    } : a));
+    setRotatingItem({ name: '', description: '', price: '', images: [], active: true });
+    setShowAddRotating(false);
+  };
+
+  const deleteRotatingItem = (itemId) => {
+    setAreas(areas.map(a => a.id === selectedAreaId ? {
+      ...a,
+      rotating_items: a.rotating_items.filter(i => i.id !== itemId)
+    } : a));
+  };
+
+  const toggleRotatingActive = (itemId) => {
+    setAreas(areas.map(a => a.id === selectedAreaId ? {
+      ...a,
+      rotating_items: a.rotating_items.map(i => i.id === itemId ? { ...i, active: !i.active } : i)
+    } : a));
   };
 
   const handleSave = async () => {
@@ -578,6 +611,43 @@ export default function MenuEditor() {
                     {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                   </select>
                   <button onClick={() => { const range = sectionTimeStart && sectionTimeEnd ? `${sectionTimeStart}-${sectionTimeEnd}` : ''; setNewSectionTime(range); addSection('menu'); setSectionTimeStart('11:00'); setSectionTimeEnd('22:00'); }} style={{padding: '10px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600}}>Add Section</button>
+                </div>
+
+                <div style={{background: '#0f172a', padding: 16, borderRadius: 8, marginBottom: 20, borderLeft: '4px solid #f59e0b'}}>
+                  <h3 style={{margin: '0 0 12px 0', color: '#f59e0b'}}>🎣 TODAY'S ROTATING ITEMS (Catch of Day, Soup of Day, etc.)</h3>
+
+                  {selectedArea.rotating_items?.length > 0 && (
+                    <div style={{marginBottom: 16}}>
+                      {selectedArea.rotating_items.map(item => (
+                        <div key={item.id} style={{background: '#1e293b', padding: 12, borderRadius: 6, marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: item.active ? 1 : 0.5}}>
+                          <div style={{flex: 1}}>
+                            <h5 style={{margin: '0 0 4px 0'}}>{item.name}</h5>
+                            {item.description && <p style={{margin: '0 0 4px 0', fontSize: 12, color: '#94a3b8'}}>{item.description}</p>}
+                            {item.price && <p style={{margin: 0, fontWeight: 600}}>{item.price}</p>}
+                          </div>
+                          <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+                            <button onClick={() => toggleRotatingActive(item.id)} style={{padding: '6px 12px', background: item.active ? '#22c55e' : '#64748b', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 600}}>{item.active ? '✓ Active' : 'Inactive'}</button>
+                            <button onClick={() => setRotatingItem(item); setShowAddRotating(true)} style={{padding: '6px 10px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Edit</button>
+                            <button onClick={() => deleteRotatingItem(item.id)} style={{padding: '6px 10px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>Delete</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {showAddRotating ? (
+                    <div style={{background: '#1e293b', padding: 12, borderRadius: 6}}>
+                      <input type="text" placeholder="Item name (Catch of Day, Soup of Day, etc.)" value={rotatingItem.name} onChange={(e) => setRotatingItem({...rotatingItem, name: e.target.value})} style={{width: '100%', padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 4, marginBottom: 8}} />
+                      <textarea placeholder="Description" value={rotatingItem.description} onChange={(e) => setRotatingItem({...rotatingItem, description: e.target.value})} style={{width: '100%', padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 4, marginBottom: 8, minHeight: 60}} />
+                      <input type="text" placeholder="Price" value={rotatingItem.price} onChange={(e) => setRotatingItem({...rotatingItem, price: e.target.value})} style={{width: '100%', padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 4, marginBottom: 8}} />
+                      <div style={{display: 'flex', gap: 8}}>
+                        <button onClick={addRotatingItem} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600}}>Save Item</button>
+                        <button onClick={() => { setShowAddRotating(false); setRotatingItem({ name: '', description: '', price: '', images: [], active: true }); }} style={{flex: 1, padding: 8, background: '#64748b', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer'}}>Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setShowAddRotating(true)} style={{width: '100%', padding: 12, background: '#f59e0b', color: '#000', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 14}}>+ Add Rotating Item</button>
+                  )}
                 </div>
 
                 {selectedArea.menu_sections.map(section => (

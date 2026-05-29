@@ -25,6 +25,7 @@ export default function MenuEditor() {
   const [selectedAreaId, setSelectedAreaId] = useState(null);
   const [newAreaName, setNewAreaName] = useState('');
   const [tab, setTab] = useState('menu');
+  const [happyHour, setHappyHour] = useState([]);
 
   // Current tab state (reusable across all tabs)
   const [editingSection, setEditingSection] = useState(null);
@@ -529,9 +530,9 @@ export default function MenuEditor() {
           </div>
 
           <div style={{display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.1)', overflowX: 'auto'}}>
-            {['menu', 'drinks', 'specials', 'sides', 'daily', 'events', 'hours', 'dailyFeatures', 'gallery', 'business'].map(t => (
+            {['menu', 'drinks', 'specials', 'sides', 'daily', 'events', 'happyHour', 'hours', 'dailyFeatures', 'gallery', 'business'].map(t => (
               <button key={t} onClick={() => { setTab(t); setEditingItem(null); setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true }); }} style={{padding: '8px 12px', background: tab === t ? '#0b7a75' : '#1e293b', color: '#f1f5f9', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: tab === t ? 600 : 400, whiteSpace: 'nowrap'}}>
-                {t === 'menu' && '🍽️'}{t === 'drinks' && '🥤'}{t === 'specials' && '⭐'}{t === 'sides' && '➕'}{t === 'daily' && '📅'}{t === 'events' && '🎉'}{t === 'hours' && '🕐'}{t === 'dailyFeatures' && '🎣'}{t === 'gallery' && '📷'}{t === 'business' && '🌐'}
+                {t === 'menu' && '🍽️'}{t === 'drinks' && '🥤'}{t === 'specials' && '⭐'}{t === 'sides' && '➕'}{t === 'daily' && '📅'}{t === 'events' && '🎉'}{t === 'happyHour' && '🍹'}{t === 'hours' && '🕐'}{t === 'dailyFeatures' && '🎣'}{t === 'gallery' && '📷'}{t === 'business' && '🌐'}
               </button>
             ))}
           </div>
@@ -897,6 +898,53 @@ export default function MenuEditor() {
                 )}
                 {selectedArea.events.length > 0 && <ItemRenderer items={selectedArea.events} targetField="events" />}
                 {selectedArea.events.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No events yet</p>}
+              </>
+            )}
+
+            {/* HAPPY HOUR TAB */}
+            {tab === 'happyHour' && (
+              <>
+                <h2>Happy Hour</h2>
+                {!editingItem && !expandedAddForm && <button onClick={() => setExpandedAddForm('happyHour')} style={{width: '100%', padding: 12, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 16, fontWeight: 600}}>+ Add Happy Hour Item</button>}
+                {(editingItem || expandedAddForm === 'happyHour') && (
+                  <div style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 16}}>
+                    <h4 style={{margin: '0 0 12px 0'}}>{editingItem ? 'Edit Happy Hour Item' : 'Add Happy Hour Item'}</h4>
+                    <input type="text" placeholder="Item name" value={editingItem ? editingItem.name : newItem.name} onChange={(e) => editingItem ? setEditingItem({...editingItem, name: e.target.value}) : setNewItem({...newItem, name: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <textarea placeholder="Description" value={editingItem ? editingItem.description : newItem.description} onChange={(e) => editingItem ? setEditingItem({...editingItem, description: e.target.value}) : setNewItem({...newItem, description: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10, height: 60}} />
+                    <input type="text" placeholder="Price (e.g. $5 or 50% off)" value={editingItem ? editingItem.price : newItem.price} onChange={(e) => editingItem ? setEditingItem({...editingItem, price: e.target.value}) : setNewItem({...newItem, price: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <input type="text" placeholder="Time range (e.g. 4pm-7pm)" value={editingItem ? editingItem.time : newItem.time} onChange={(e) => editingItem ? setEditingItem({...editingItem, time: e.target.value}) : setNewItem({...newItem, time: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <input type="text" placeholder="Days (e.g. Mon-Fri)" value={editingItem ? editingItem.date : newItem.date} onChange={(e) => editingItem ? setEditingItem({...editingItem, date: e.target.value}) : setNewItem({...newItem, date: e.target.value})} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                    <label style={{display: 'flex', alignItems: 'center', gap: 8, color: '#f1f5f9', marginBottom: 12}}>
+                      <input type="checkbox" checked={editingItem ? editingItem.active : newItem.active} onChange={(e) => editingItem ? setEditingItem({...editingItem, active: e.target.checked}) : setNewItem({...newItem, active: e.target.checked})} />
+                      Active
+                    </label>
+                    <button onClick={() => fileInputRef.current?.click()} style={{width: '100%', padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer', marginBottom: 10}}>📤 Add Image</button>
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{display: 'none'}} />
+                    <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                      {(editingItem ? editingItem.images : newItem.images).map((img, idx) => (
+                        <div key={idx} style={{position: 'relative', width: 50, height: 50}}>
+                          <img src={img.url} alt="preview" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4}} />
+                          <button onClick={() => deleteImage(idx, !!editingItem)} style={{position: 'absolute', top: -4, right: -4, background: '#dc2626', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, cursor: 'pointer', fontSize: 10}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{display: 'flex', gap: 8}}>
+                      <select value={imageLabel} onChange={(e) => setImageLabel(e.target.value)} style={{flex: 1, padding: 10, background: '#0f172a', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                        <option>Grilled</option>
+                        <option>Blackened</option>
+                        <option>Fried</option>
+                        <option>Steamed</option>
+                        <option>Baked</option>
+                      </select>
+                      <button onClick={editingItem ? () => { const updated = happyHour.map(item => item.id === editingItem.id ? editingItem : item); setHappyHour(updated); setEditingItem(null); setExpandedAddForm(null); } : () => { const item = { id: Math.random().toString(36).substr(2, 9), ...newItem, images: newItem.images || [], active: newItem.active }; setHappyHour([...happyHour, item]); setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', type: 'side', images: [], active: true }); setExpandedAddForm(null); }} style={{flex: 1, padding: 10, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>
+                        {editingItem ? 'Update' : 'Save'}
+                      </button>
+                    </div>
+                    {(editingItem || expandedAddForm) && <button onClick={() => { setEditingItem(null); setExpandedAddForm(null); }} style={{width: '100%', marginTop: 10, padding: 10, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>}
+                  </div>
+                )}
+                {happyHour.length > 0 && <ItemRenderer items={happyHour} targetField="happyHour" />}
+                {happyHour.length === 0 && !editingItem && !expandedAddForm && <p style={{color: '#64748b', textAlign: 'center', marginTop: 20}}>No happy hour items yet</p>}
               </>
             )}
 

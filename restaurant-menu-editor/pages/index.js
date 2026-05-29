@@ -117,6 +117,49 @@ export default function MenuEditor() {
       ]}
     ];
 
+    const drinkSections = [
+      { id: 'd1', name: 'House Specialty Drinks', time_range: '', items: [
+        { id: 'd1a', section_id: 'd1', name: 'Komoniwanaleiya', description: 'Our original refreshing creation: made with vodka, blue curacao, island punch liqueur, and tropical juices. Comes with a free lei!', price: '', images: [] },
+        { id: 'd1b', section_id: 'd1', name: 'Gulf Island Bucket', description: 'For a BEACHIN\' time try this huge drink in a souvenir sand pail that\'s filled with long island liqueur, sour, cranberry, and sprite.', price: '', images: [] },
+        { id: 'd1c', section_id: 'd1', name: 'Margaritas', description: 'Get it frozen or on the rocks! Flavors: original, strawberry, peach, mango, raspberry, or watermelon.', price: '', images: [] },
+        { id: 'd1d', section_id: 'd1', name: 'Daiquiries', description: 'Get it original or virgin! Flavors: strawberry, piña colada, peach, mango, banana, raspberry, or watermelon.', price: '', images: [] },
+        { id: 'd1e', section_id: 'd1', name: 'Kiss My Malibu', description: 'Our island favorite made with Malibu rum, Jamaican rum, tropical juices, and grenadine.', price: '', images: [] },
+        { id: 'd1f', section_id: 'd1', name: 'Bushwacker', description: 'An island tradition made with real ice cream, island rum, and Kahlúa.', price: '', images: [] }
+      ]},
+      { id: 'd2', name: 'Wine', time_range: '', items: [
+        { id: 'd2a', section_id: 'd2', name: 'House Wine by Copper Ridge - Chardonnay', description: '', price: '$5', images: [] },
+        { id: 'd2b', section_id: 'd2', name: 'House Wine by Copper Ridge - White Zinfandel', description: '', price: '$5', images: [] },
+        { id: 'd2c', section_id: 'd2', name: 'House Wine by Copper Ridge - Cabernet Sauvignon', description: '', price: '$5', images: [] },
+        { id: 'd2d', section_id: 'd2', name: 'House Wine by Copper Ridge - Merlot', description: '', price: '$5', images: [] },
+        { id: 'd2e', section_id: 'd2', name: 'William Hill Chardonnay, AU', description: '', price: '$8 / $32', images: [] },
+        { id: 'd2f', section_id: 'd2', name: 'Kendall Jackson Chardonnay', description: '', price: '$9 / $34', images: [] },
+        { id: 'd2g', section_id: 'd2', name: 'EccoDomani Pinot Grigio, IT', description: '', price: '$7 / $28', images: [] },
+        { id: 'd2h', section_id: 'd2', name: 'Nobilo Sauvignon Blanc, NZ', description: '', price: '$7 / $28', images: [] },
+        { id: 'd2i', section_id: 'd2', name: 'Hogue Riesling, WA', description: '', price: '$8 / $32', images: [] },
+        { id: 'd2j', section_id: 'd2', name: 'Bella Sera Moscato, IT', description: '', price: '$7 / $28', images: [] },
+        { id: 'd2k', section_id: 'd2', name: 'Mirassou Pinot Noir, CA', description: '', price: '$7 / $28', images: [] },
+        { id: 'd2l', section_id: 'd2', name: 'La Crema Pinot Noir, CA', description: '', price: '$9 / $34', images: [] },
+        { id: 'd2m', section_id: 'd2', name: 'Kendall Jackson Merlot, CA', description: '', price: '$9 / $34', images: [] },
+        { id: 'd2n', section_id: 'd2', name: 'Kendall Jackson Cabernet, CA', description: '', price: '$9 / $34', images: [] },
+        { id: 'd2o', section_id: 'd2', name: '19 Crimes Blend, AU', description: '', price: '$8 / $32', images: [] }
+      ]},
+      { id: 'd3', name: 'Beer', time_range: '', items: [
+        { id: 'd3a', section_id: 'd3', name: 'Bud Light', description: '', price: '', images: [] },
+        { id: 'd3b', section_id: 'd3', name: 'Miller Lite', description: '', price: '', images: [] },
+        { id: 'd3c', section_id: 'd3', name: 'Coors Light', description: '', price: '', images: [] },
+        { id: 'd3d', section_id: 'd3', name: 'Budweiser', description: '', price: '', images: [] },
+        { id: 'd3e', section_id: 'd3', name: 'Michelob Ultra', description: '', price: '', images: [] },
+        { id: 'd3f', section_id: 'd3', name: 'Corona Extra', description: '', price: '', images: [] },
+        { id: 'd3g', section_id: 'd3', name: 'White Claw Mango', description: '', price: '', images: [] },
+        { id: 'd3h', section_id: 'd3', name: 'Blue Moon, ABV 5.4%', description: 'Draft', price: '', images: [] },
+        { id: 'd3i', section_id: 'd3', name: 'Good People IPA, ABV 7.1%', description: 'Draft', price: '', images: [] },
+        { id: 'd3j', section_id: 'd3', name: 'Yuengling, ABV 4.4%', description: 'Draft', price: '', images: [] },
+        { id: 'd3k', section_id: 'd3', name: 'Michelob Ultra, 4.2%', description: 'Draft', price: '', images: [] },
+        { id: 'd3l', section_id: 'd3', name: 'Kona Big Wave, ABV 4.4%', description: 'Draft', price: '', images: [] },
+        { id: 'd3m', section_id: 'd3', name: 'Fly Llama Blackberry Seltzer, ABV 4.5%', description: 'Draft', price: '', images: [] }
+      ]}
+    ];
+
     const newArea = {
       id: newAreaId,
       name: 'Main Restaurant',
@@ -130,7 +173,7 @@ export default function MenuEditor() {
         Sunday: { open: '11:00', close: '22:00' }
       },
       menu_sections: menuSections,
-      drink_sections: [],
+      drink_sections: drinkSections,
       specials: [],
       daily_specials: days.reduce((acc, day) => ({ ...acc, [day]: null }), {}),
       events: []

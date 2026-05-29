@@ -42,6 +42,8 @@ export default function MenuEditor() {
   const [expandedAddForm, setExpandedAddForm] = useState(null);
   const [editingSectionId, setEditingSectionId] = useState(null);
   const [editingSectionName, setEditingSectionName] = useState('');
+  const [editingSectionTimeStart, setEditingSectionTimeStart] = useState('');
+  const [editingSectionTimeEnd, setEditingSectionTimeEnd] = useState('');
 
   // Image upload
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -580,17 +582,36 @@ export default function MenuEditor() {
 
                 {selectedArea.menu_sections.map(section => (
                   <div key={section.id} style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 20}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-                      <div style={{flex: 1}}>
-                        {editingSectionId === section.id ? (
-                          <input type="text" value={editingSectionName} onChange={(e) => setEditingSectionName(e.target.value)} onBlur={() => { setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)); setEditingSectionId(null); }} onKeyDown={(e) => e.key === 'Enter' && (setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)), setEditingSectionId(null))} style={{fontSize: 18, fontWeight: 700, padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid #0b7a75', borderRadius: 6, marginBottom: 4}} />
-                        ) : (
-                          <h3 style={{margin: 0, cursor: 'pointer'}} onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); }}>{section.name}</h3>
-                        )}
-                        {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>{section.time_range}</p>}
+                    {editingSectionId === section.id ? (
+                      <div style={{background: '#0f172a', padding: 12, borderRadius: 6, marginBottom: 12}}>
+                        <h4 style={{margin: '0 0 12px 0'}}>Edit Section</h4>
+                        <input type="text" placeholder="Section name" value={editingSectionName} onChange={(e) => setEditingSectionName(e.target.value)} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                        <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                          <select value={editingSectionTimeStart} onChange={(e) => setEditingSectionTimeStart(e.target.value)} style={{flex: 1, padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                            <option value="">Start Time</option>
+                            {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          </select>
+                          <select value={editingSectionTimeEnd} onChange={(e) => setEditingSectionTimeEnd(e.target.value)} style={{flex: 1, padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                            <option value="">End Time</option>
+                            {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          </select>
+                        </div>
+                        <div style={{display: 'flex', gap: 8}}>
+                          <button onClick={() => { const timeRange = editingSectionTimeStart && editingSectionTimeEnd ? `${editingSectionTimeStart}-${editingSectionTimeEnd}` : ''; setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === section.id ? {...s, name: editingSectionName, time_range: timeRange} : s) } : a)); setEditingSectionId(null); }} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>Save</button>
+                          <button onClick={() => setEditingSectionId(null)} style={{flex: 1, padding: 8, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>
+                          <button onClick={() => deleteSection(section.id, 'menu')} style={{padding: 8, background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Delete</button>
+                        </div>
                       </div>
-                      <button onClick={() => deleteSection(section.id, 'menu')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>
-                    </div>
+                    ) : (
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+                        <div style={{flex: 1}}>
+                          <h3 style={{margin: 0, cursor: 'pointer', color: '#0b7a75'}} onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); const [start, end] = section.time_range?.split('-') || ['', '']; setEditingSectionTimeStart(start); setEditingSectionTimeEnd(end); }}>{section.name}</h3>
+                          {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>⏰ {section.time_range}</p>}
+                          <p style={{margin: '4px 0 0 0', fontSize: 11, color: '#64748b'}}>Click name to edit</p>
+                        </div>
+                        <button onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); const [start, end] = section.time_range?.split('-') || ['', '']; setEditingSectionTimeStart(start); setEditingSectionTimeEnd(end); }} style={{padding: '6px 12px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginRight: 8}}>Edit</button>
+                      </div>
+                    )}
 
                     <ItemForm isSectionItem={true} sectionId={section.id} onAdd={() => addSectionItem('menu')} onUpdate={() => updateSectionItem('menu')} />
 
@@ -678,17 +699,36 @@ export default function MenuEditor() {
 
                 {selectedArea.drink_sections.map(section => (
                   <div key={section.id} style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 20}}>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-                      <div style={{flex: 1}}>
-                        {editingSectionId === section.id ? (
-                          <input type="text" value={editingSectionName} onChange={(e) => setEditingSectionName(e.target.value)} onBlur={() => { setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, drink_sections: a.drink_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)); setEditingSectionId(null); }} onKeyDown={(e) => e.key === 'Enter' && (setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, drink_sections: a.drink_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)), setEditingSectionId(null))} style={{fontSize: 18, fontWeight: 700, padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid #0b7a75', borderRadius: 6, marginBottom: 4}} />
-                        ) : (
-                          <h3 style={{margin: 0, cursor: 'pointer'}} onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); }}>{section.name}</h3>
-                        )}
-                        {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>{section.time_range}</p>}
+                    {editingSectionId === section.id ? (
+                      <div style={{background: '#0f172a', padding: 12, borderRadius: 6, marginBottom: 12}}>
+                        <h4 style={{margin: '0 0 12px 0'}}>Edit Section</h4>
+                        <input type="text" placeholder="Section name" value={editingSectionName} onChange={(e) => setEditingSectionName(e.target.value)} style={{width: '100%', padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, marginBottom: 10}} />
+                        <div style={{display: 'flex', gap: 8, marginBottom: 10}}>
+                          <select value={editingSectionTimeStart} onChange={(e) => setEditingSectionTimeStart(e.target.value)} style={{flex: 1, padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                            <option value="">Start Time</option>
+                            {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          </select>
+                          <select value={editingSectionTimeEnd} onChange={(e) => setEditingSectionTimeEnd(e.target.value)} style={{flex: 1, padding: 8, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}}>
+                            <option value="">End Time</option>
+                            {timeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                          </select>
+                        </div>
+                        <div style={{display: 'flex', gap: 8}}>
+                          <button onClick={() => { const timeRange = editingSectionTimeStart && editingSectionTimeEnd ? `${editingSectionTimeStart}-${editingSectionTimeEnd}` : ''; setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, drink_sections: a.drink_sections.map(s => s.id === section.id ? {...s, name: editingSectionName, time_range: timeRange} : s) } : a)); setEditingSectionId(null); }} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>Save</button>
+                          <button onClick={() => setEditingSectionId(null)} style={{flex: 1, padding: 8, background: '#64748b', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Cancel</button>
+                          <button onClick={() => deleteSection(section.id, 'drinks')} style={{padding: 8, background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'}}>Delete</button>
+                        </div>
                       </div>
-                      <button onClick={() => deleteSection(section.id, 'drinks')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>
-                    </div>
+                    ) : (
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
+                        <div style={{flex: 1}}>
+                          <h3 style={{margin: 0, cursor: 'pointer', color: '#0b7a75'}} onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); const [start, end] = section.time_range?.split('-') || ['', '']; setEditingSectionTimeStart(start); setEditingSectionTimeEnd(end); }}>{section.name}</h3>
+                          {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>⏰ {section.time_range}</p>}
+                          <p style={{margin: '4px 0 0 0', fontSize: 11, color: '#64748b'}}>Click name to edit</p>
+                        </div>
+                        <button onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); const [start, end] = section.time_range?.split('-') || ['', '']; setEditingSectionTimeStart(start); setEditingSectionTimeEnd(end); }} style={{padding: '6px 12px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginRight: 8}}>Edit</button>
+                      </div>
+                    )}
 
                     <ItemForm isSectionItem={true} sectionId={section.id} onAdd={() => addSectionItem('drinks')} onUpdate={() => updateSectionItem('drinks')} />
 

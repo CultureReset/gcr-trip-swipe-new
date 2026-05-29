@@ -35,6 +35,8 @@ export default function MenuEditor() {
   const [editingItemId, setEditingItemId] = useState(null);
   const [showGallerySelector, setShowGallerySelector] = useState(null);
   const [expandedAddForm, setExpandedAddForm] = useState(null);
+  const [editingSectionId, setEditingSectionId] = useState(null);
+  const [editingSectionName, setEditingSectionName] = useState('');
 
   // Image upload
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -505,13 +507,16 @@ export default function MenuEditor() {
             {area.name}
           </button>
         ))}
-        <button onClick={() => document.getElementById('newAreaInput').focus()} style={{padding: '8px 12px', background: '#1e293b', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer'}}>+ Add Area</button>
+        <button onClick={addArea} style={{padding: '8px 12px', background: '#1e293b', color: '#f1f5f9', border: '1px dashed rgba(255,255,255,.3)', borderRadius: 6, cursor: 'pointer'}}>+ Add Area</button>
       </div>
 
       {selectedArea && (
         <>
           <div style={{padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.1)'}}>
-            <input id="newAreaInput" type="text" placeholder="New area name" value={newAreaName} onChange={(e) => setNewAreaName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addArea()} style={{padding: '8px 12px', background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6, width: '100%', maxWidth: 300}} />
+            <div style={{display: 'flex', gap: 8}}>
+              <input type="text" placeholder="New area name" value={newAreaName} onChange={(e) => setNewAreaName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addArea()} style={{flex: 1, padding: '8px 12px', background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 6}} />
+              <button onClick={addArea} style={{padding: '8px 16px', background: '#0b7a75', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600}}>Add</button>
+            </div>
           </div>
 
           <div style={{display: 'flex', gap: 8, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.1)', overflowX: 'auto'}}>
@@ -536,8 +541,12 @@ export default function MenuEditor() {
                 {selectedArea.menu_sections.map(section => (
                   <div key={section.id} style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 20}}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-                      <div>
-                        <h3 style={{margin: 0}}>{section.name}</h3>
+                      <div style={{flex: 1}}>
+                        {editingSectionId === section.id ? (
+                          <input type="text" value={editingSectionName} onChange={(e) => setEditingSectionName(e.target.value)} onBlur={() => { setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)); setEditingSectionId(null); }} onKeyDown={(e) => e.key === 'Enter' && (setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, menu_sections: a.menu_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)), setEditingSectionId(null))} style={{fontSize: 18, fontWeight: 700, padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid #0b7a75', borderRadius: 6, marginBottom: 4}} />
+                        ) : (
+                          <h3 style={{margin: 0, cursor: 'pointer'}} onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); }}>{section.name}</h3>
+                        )}
                         {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>{section.time_range}</p>}
                       </div>
                       <button onClick={() => deleteSection(section.id, 'menu')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>
@@ -617,8 +626,12 @@ export default function MenuEditor() {
                 {selectedArea.drink_sections.map(section => (
                   <div key={section.id} style={{background: '#1e293b', padding: 16, borderRadius: 8, marginBottom: 20}}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12}}>
-                      <div>
-                        <h3 style={{margin: 0}}>{section.name}</h3>
+                      <div style={{flex: 1}}>
+                        {editingSectionId === section.id ? (
+                          <input type="text" value={editingSectionName} onChange={(e) => setEditingSectionName(e.target.value)} onBlur={() => { setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, drink_sections: a.drink_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)); setEditingSectionId(null); }} onKeyDown={(e) => e.key === 'Enter' && (setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, drink_sections: a.drink_sections.map(s => s.id === section.id ? {...s, name: editingSectionName} : s) } : a)), setEditingSectionId(null))} style={{fontSize: 18, fontWeight: 700, padding: 8, background: '#0f172a', color: '#f1f5f9', border: '1px solid #0b7a75', borderRadius: 6, marginBottom: 4}} />
+                        ) : (
+                          <h3 style={{margin: 0, cursor: 'pointer'}} onClick={() => { setEditingSectionId(section.id); setEditingSectionName(section.name); }}>{section.name}</h3>
+                        )}
                         {section.time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>{section.time_range}</p>}
                       </div>
                       <button onClick={() => deleteSection(section.id, 'drinks')} style={{padding: '6px 12px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12}}>Delete</button>

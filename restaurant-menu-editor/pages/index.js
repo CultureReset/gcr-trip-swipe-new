@@ -181,33 +181,7 @@ export default function MenuEditor() {
       events: []
     };
 
-    // Sides & Add-ons
-    const sidesData = [
-      // Sides (base items with standalone prices)
-      { id: 's1', name: 'Caribbean Rice', description: 'Seasoned rice with tropical spices', price: '$3', type: 'side', images: [] },
-      { id: 's2', name: 'Steamed Vegetables', description: 'Seasonal mixed vegetables', price: '$3', type: 'side', images: [] },
-      { id: 's3', name: 'Gulf Island Potatoes', description: 'Roasted with herbs and garlic', price: '$4', type: 'side', images: [] },
-      { id: 's4', name: 'French Fries', description: 'Crispy golden fries', price: '$3', type: 'side', images: [] },
-      { id: 's5', name: 'Grilled Pineapple', description: 'Sweet caramelized pineapple', price: '$4', type: 'side', images: [] },
-      { id: 's6', name: 'Key West Slaw', description: 'Fresh coleslaw with lime dressing', price: '$3', type: 'side', images: [] },
-      // Add-ons (additional items with surcharge prices)
-      { id: 'a1', name: 'Extra Shrimp', description: 'Add grilled shrimp to any dish', price: '+$3.50', type: 'addon', images: [] },
-      { id: 'a2', name: 'Grouper Fillet', description: 'Add fresh grouper', price: '+$4.00', type: 'addon', images: [] },
-      { id: 'a3', name: 'Crabmeat', description: 'Add lump crab', price: '+$2.50', type: 'addon', images: [] },
-      { id: 'a4', name: 'Bacon', description: 'Add crispy bacon', price: '+$1.50', type: 'addon', images: [] },
-      { id: 'a5', name: 'Grilled Chicken', description: 'Add grilled chicken breast', price: '+$2.00', type: 'addon', images: [] },
-      { id: 'a6', name: 'Extra Cheese', description: 'Add extra melted cheese', price: '+$1.00', type: 'addon', images: [] }
-    ];
-
-    // Daily Features (Catch of the Day, Soup of the Day, etc.)
-    const dailyFeaturesData = [
-      { id: 'df1', name: 'Catch of the Day', description: 'Fresh fish prepared your way - grilled, blackened, or fried', price: 'Market Price', images: [], active: true },
-      { id: 'df2', name: 'Soup of the Day', description: 'Chef\'s special rotating soup', price: '$6 / $9', images: [], active: true }
-    ];
-
     setAreas([newArea]);
-    setSides(sidesData);
-    setDailyFeatures(dailyFeaturesData);
   }, [slug]);
 
   const handlePinSubmit = async (e) => {

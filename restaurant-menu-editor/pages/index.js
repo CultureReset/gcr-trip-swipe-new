@@ -559,6 +559,12 @@ export default function MenuEditor() {
             {tab === 'menu' && (
               <>
                 <h2>Menu Sections</h2>
+                <div style={{display: 'flex', gap: 8, marginBottom: 12}}>
+                  <button onClick={() => { setNewSectionName('Breakfast'); setSectionTimeStart('07:00'); setSectionTimeEnd('11:00'); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>☀️ Breakfast</button>
+                  <button onClick={() => { setNewSectionName('Brunch'); setSectionTimeStart('11:00'); setSectionTimeEnd('16:00'); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🥐 Brunch</button>
+                  <button onClick={() => { setNewSectionName('Lunch'); setSectionTimeStart('11:00'); setSectionTimeEnd('15:00'); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🌤️ Lunch</button>
+                  <button onClick={() => { setNewSectionName('Dinner'); setSectionTimeStart('17:00'); setSectionTimeEnd('22:00'); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🌙 Dinner</button>
+                </div>
                 <div style={{display: 'flex', gap: 8, marginBottom: 20}}>
                   <input type="text" placeholder="Section name (Seafood, Breakfast, etc.)" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
                   <select value={sectionTimeStart} onChange={(e) => setSectionTimeStart(e.target.value)} style={{padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}}>
@@ -651,6 +657,12 @@ export default function MenuEditor() {
             {tab === 'drinks' && (
               <>
                 <h2>Drink Sections</h2>
+                <div style={{display: 'flex', gap: 8, marginBottom: 12}}>
+                  <button onClick={() => { setNewSectionName('Happy Hour'); setSectionTimeStart('16:00'); setSectionTimeEnd('19:00'); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🍹 Happy Hour</button>
+                  <button onClick={() => { setNewSectionName('Cocktails'); setSectionTimeStart('17:00'); setSectionTimeEnd('23:00'); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🍸 Cocktails</button>
+                  <button onClick={() => { setNewSectionName('Beer & Wine'); setSectionTimeStart(''); setSectionTimeEnd(''); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🍺 Beer & Wine</button>
+                  <button onClick={() => { setNewSectionName('Shots'); setSectionTimeStart(''); setSectionTimeEnd(''); }} style={{padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🥃 Shots</button>
+                </div>
                 <div style={{display: 'flex', gap: 8, marginBottom: 20}}>
                   <input type="text" placeholder="Section name (Cocktails, Beer, Wine, etc.)" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} style={{flex: 1, padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}} />
                   <select value={sectionTimeStart} onChange={(e) => setSectionTimeStart(e.target.value)} style={{padding: 10, background: '#1e293b', color: '#f1f5f9', border: '1px solid rgba(255,255,255,.15)', borderRadius: 8}}>
@@ -854,6 +866,7 @@ export default function MenuEditor() {
             {tab === 'daily' && (
               <>
                 <h2>Daily Specials</h2>
+                <p style={{fontSize: 12, color: '#94a3b8', marginBottom: 16}}>Each special can have optional time restrictions (e.g., Lunch Special 11am-3pm)</p>
                 {days.map(day => (
                   <div key={day} style={{background: '#1e293b', padding: 12, borderRadius: 6, marginBottom: 12}}>
                     <h3 style={{margin: '0 0 12px 0'}}>{day}</h3>
@@ -864,6 +877,7 @@ export default function MenuEditor() {
                             <h5 style={{margin: 0}}>{selectedArea.daily_specials[day].name}</h5>
                             <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#94a3b8'}}>{selectedArea.daily_specials[day].description}</p>
                             <p style={{margin: '4px 0 0 0', fontWeight: 600}}>{selectedArea.daily_specials[day].price}</p>
+                            {selectedArea.daily_specials[day].time_range && <p style={{margin: '4px 0 0 0', fontSize: 12, color: '#0b7a75', fontWeight: 600}}>⏰ {selectedArea.daily_specials[day].time_range}</p>}
                             <label style={{display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, color: '#f1f5f9'}}>
                               <input type="checkbox" checked={selectedArea.daily_specials[day].active !== false} onChange={(e) => setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, daily_specials: { ...a.daily_specials, [day]: { ...a.daily_specials[day], active: e.target.checked } } } : a))} />
                               Active
@@ -877,7 +891,14 @@ export default function MenuEditor() {
                       </div>
                     ) : (
                       <div style={{background: '#0f172a', padding: 12, borderRadius: 6}}>
-                        <ItemForm targetField="daily" onAdd={() => { const item = { id: Math.random().toString(36).substr(2, 9), ...newItem, images: newItem.images || [], active: newItem.active }; setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, daily_specials: { ...a.daily_specials, [day]: item } } : a)); setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true }); }} onUpdate={() => { setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, daily_specials: { ...a.daily_specials, [day]: editingItem } } : a)); setEditingItem(null); }} />
+                        <div style={{display: 'flex', gap: 8, marginBottom: 12}}>
+                          <button onClick={() => { setSectionTimeStart('07:00'); setSectionTimeEnd('11:00'); }} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>☀️ Breakfast</button>
+                          <button onClick={() => { setSectionTimeStart('11:00'); setSectionTimeEnd('15:00'); }} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🌤️ Lunch</button>
+                          <button onClick={() => { setSectionTimeStart('11:00'); setSectionTimeEnd('16:00'); }} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🥐 Brunch</button>
+                          <button onClick={() => { setSectionTimeStart('17:00'); setSectionTimeEnd('22:00'); }} style={{flex: 1, padding: 8, background: '#0b7a75', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>🌙 Dinner</button>
+                          <button onClick={() => { setSectionTimeStart(''); setSectionTimeEnd(''); }} style={{flex: 1, padding: 8, background: '#64748b', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12}}>✕ All Day</button>
+                        </div>
+                        <ItemForm targetField="daily" onAdd={() => { const timeRange = sectionTimeStart && sectionTimeEnd ? `${sectionTimeStart}-${sectionTimeEnd}` : ''; const item = { id: Math.random().toString(36).substr(2, 9), ...newItem, images: newItem.images || [], active: newItem.active, time_range: timeRange }; setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, daily_specials: { ...a.daily_specials, [day]: item } } : a)); setNewItem({ section_id: '', name: '', description: '', price: '', date: '', time: '', location: '', images: [], active: true }); setSectionTimeStart(''); setSectionTimeEnd(''); }} onUpdate={() => { const timeRange = sectionTimeStart && sectionTimeEnd ? `${sectionTimeStart}-${sectionTimeEnd}` : ''; setAreas(areas.map(a => a.id === selectedAreaId ? { ...a, daily_specials: { ...a.daily_specials, [day]: { ...editingItem, time_range: timeRange } } } : a)); setEditingItem(null); setSectionTimeStart(''); setSectionTimeEnd(''); }} />
                       </div>
                     )}
                   </div>

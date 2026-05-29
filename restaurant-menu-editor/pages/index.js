@@ -181,7 +181,29 @@ export default function MenuEditor() {
       events: []
     };
 
+    // Sides & Add-ons
+    const sidesData = [
+      { id: 's1', name: 'Caribbean Rice', description: 'Seasoned rice with tropical spices', price: '$3', images: [] },
+      { id: 's2', name: 'Steamed Vegetables', description: 'Seasonal mixed vegetables', price: '$3', images: [] },
+      { id: 's3', name: 'Gulf Island Potatoes', description: 'Roasted with herbs and garlic', price: '$4', images: [] },
+      { id: 's4', name: 'French Fries', description: 'Crispy golden fries', price: '$3', images: [] },
+      { id: 's5', name: 'Grilled Pineapple', description: 'Sweet caramelized pineapple', price: '$4', images: [] },
+      { id: 's6', name: 'Key West Slaw', description: 'Fresh coleslaw with lime dressing', price: '$3', images: [] },
+      { id: 's7', name: 'Garlic Bread', description: 'Toasted with fresh garlic', price: '$4', images: [] },
+      { id: 's8', name: 'Mac & Cheese', description: 'Creamy three-cheese blend', price: '$5', images: [] },
+      { id: 's9', name: 'Black Beans & Rice', description: 'Traditional island side', price: '$3', images: [] },
+      { id: 's10', name: 'Mashed Potatoes', description: 'Creamy with butter', price: '$3', images: [] }
+    ];
+
+    // Daily Features (Catch of the Day, Soup of the Day, etc.)
+    const dailyFeaturesData = [
+      { id: 'df1', name: 'Catch of the Day', description: 'Fresh fish prepared your way - grilled, blackened, or fried', price: 'Market Price', images: [], active: true },
+      { id: 'df2', name: 'Soup of the Day', description: 'Chef\'s special rotating soup', price: '$6 / $9', images: [], active: true }
+    ];
+
     setAreas([newArea]);
+    setSides(sidesData);
+    setDailyFeatures(dailyFeaturesData);
   }, [slug]);
 
   const handlePinSubmit = async (e) => {

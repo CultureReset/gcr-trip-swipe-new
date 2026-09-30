@@ -1,235 +1,46 @@
-# Gulf Coast Radar (GCR)
+# gcr-trip-swipe-new
 
-A comprehensive directory and social platform for businesses across Orange Beach, Gulf Shores, and Perdido Key.
+An older snapshot of the Gulf Coast Radar website, plus a Next.js menu editor and a small SaaS mini-backend. Despite the name, the Trip Swipe app is not in here.
 
-## Features
+## What it is
 
-- **Business Directory** - Browse restaurants, activities, coffee shops, and more
-- **Happy Hours** - Find daily happy hour deals across the Gulf Coast
-- **Specials & Events** - Stay updated on daily specials and live events
-- **Live Feed** - Real-time social media posts from local businesses
-- **AI Assistant** - Get personalized recommendations and answers
-- **Admin Dashboard** - Manage businesses, menus, specials, events, and more
+A static directory site for Orange Beach, Gulf Shores and Perdido Key (restaurants, events, happy hours, specials), with an admin area, data-import scripts and many working notes. The only Trip Swipe link is a "Trip Swipe" card type inside the menu editor. The actual Trip Swipe React app lives in `live-gcr-/trip-swipe`. About 458 of the 819 tracked files are committed Next.js build output under `restaurant-menu-editor/.next/`.
 
-## Tech Stack
+## How it works
 
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **Backend**: Node.js API (Supabase integration)
-- **Database**: Supabase (PostgreSQL)
-- **Social Integration**: CyberCheck API for Instagram/Facebook feeds
-- **Authentication**: Client-side session-based auth
+- Public pages at the repo root: `index.html`, `restaurants.html`, `events.html`, `happy-hours.html`, `profile.html`, `admin-dashboard.html`, `admin-login.html`, and more. `js/` (about 145 files) holds the loaders; `js/config.js` points at `api.gulfcoastradar.com` (or localhost), and some loaders such as `js/business-loader.js` and `js/gcr-supabase-loader.js` read Supabase directly from the browser.
+- `restaurant-menu-editor/`: a Next.js 16 / React 19 app (`pages/index.js`) with a PIN-gated editor and card types including Hero, Business and Trip Swipe (`react-tinder-card`). It saves to `${API_URL}/api/menu-editor/<slug>/save`; its own `pages/api/data.js` is a deprecated stub.
+- `saas-api/` (Express, `server.js` and `saas-server.js`, routes for auth, apps and user, SQL under `db/`) with a front end in `saas-dashboard/`.
+- `CSV-TEMPLATES/`, `data/` and root scripts (`populate-all-data.js`, `import-cobalt-*.js`, `check_*.py`) load business data; some contain a hardcoded path on the original owner's Mac.
+- `CYBERCHECK-MODULAR-PLATFORM/` and `cybercheck-login/` are small side folders. The root `package.json` only lists `@supabase/supabase-js`, `cheerio` and `dotenv` for the scripts.
+- The many `*.md` files at the root are old working notes, not current documentation.
 
-## Getting Started
+## Run it
 
-### Prerequisites
-
-- Node.js 16+ (for backend API)
-- Modern web browser
-- Supabase account (for database)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd gcr-new
-   ```
-
-2. **Set up configuration**
-   - Copy `js/ai-config.example.js` to `js/ai-config.js` and add your API keys
-   - Update `js/config.js` with your production API URLs
-
-3. **Set up backend API**
-   - Follow instructions in `/backend` folder (if included)
-   - Or deploy your own Supabase backend
-
-4. **Run locally**
-   ```bash
-   # Simple HTTP server
-   python3 -m http.server 8000
-   # Or use any static file server
-   ```
-
-5. **Access the app**
-   - Frontend: `http://localhost:8000`
-   - Admin Dashboard: `http://localhost:8000/admin-login.html`
-
-### Admin Dashboard Access
-
-First time setup:
-1. Visit `http://localhost:8000/admin-login.html`
-2. Create your admin password (minimum 6 characters)
-3. Login to access the dashboard
-
-Features:
-- Manage business listings
-- Edit menus, drinks, happy hours
-- Add/edit specials and events
-- Manage live feed posts
-- Bulk upload via CSV
-
-## Project Structure
-
-```
-gcr-new/
-├── index.html              # Homepage
-├── restaurants.html        # Restaurant listings
-├── happy-hours.html        # Happy hour deals
-├── specials.html          # Daily specials
-├── events.html            # Events calendar
-├── feed.html              # Live social feed
-├── profile.html           # Business profile page
-├── admin-login.html       # Admin login
-├── admin-dashboard.html   # Admin dashboard
-├── css/                   # Stylesheets
-├── js/                    # JavaScript modules
-│   ├── config.js         # Central configuration
-│   ├── admin-auth.js     # Authentication system
-│   ├── business-loader.js # Business data loading
-│   ├── feed.js           # Social feed display
-│   └── ...               # Other modules
-├── data/                  # Static data files
-└── assets/               # Images, icons, etc.
+```sh
+python3 -m http.server 8000                       # static pages, http://localhost:8000/index.html
+cd restaurant-menu-editor && npm install && npm run dev
+cd saas-api && npm install && node server.js
 ```
 
-## Configuration
+Environment variable names: menu editor `NEXT_PUBLIC_API_URL`; `saas-api` `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `PORT` (see `saas-api/saas-env.example`). The pages depend on external APIs and Supabase projects, and the import scripts need data files that are not in the repo. Not run here.
 
-### API Endpoints
+## Status
 
-Update `js/config.js` with your production URLs:
+Stalled: a mislabeled old GCR snapshot, useful mainly as an archive of early data files and the Next.js menu editor.
 
-```javascript
-API: {
-  GCR_BASE_URL: 'https://api.gulfcoastradar.com/api',
-  CYBERCHECK_URL: 'https://cybercheckinc.com',
-  SOCIAL_FEED_URL: 'https://api.gulfcoastradar.com/social',
-}
+## Where it fits
+
+```mermaid
+flowchart LR
+  P[Static pages and js loaders] -->|/api/gcr| A[api.gulfcoastradar.com]
+  P -->|browser Supabase client| S[(Supabase)]
+  M[restaurant-menu-editor Next.js] -->|/api/menu-editor/slug/save| B[NEXT_PUBLIC_API_URL backend]
+  SA[saas-api Express] --> S
 ```
 
-### Environment Variables
+## Related repos
 
-For sensitive data, use environment-specific config files:
-- `js/ai-config.js` - AI API keys (gitignored)
-- `js/google-sheets-config.js` - Google API keys (gitignored)
-
-## Development
-
-### Running Backend API
-
-```bash
-cd backend
-npm install
-npm start
-# API will run on http://localhost:3002
-```
-
-### Database Setup
-
-The project uses Supabase with the following tables:
-- `gcr_businesses` - Business listings
-- Additional tables defined in `/backend/schema.sql`
-
-### Happy Hour Data Format
-
-Follow the standard format in `backend/HAPPY_HOUR_TEMPLATE.md`:
-
-```json
-{
-  "title": "Happy Hour",
-  "days": "Daily 3 PM–6 PM",
-  "items": [
-    {
-      "name": "Item Name",
-      "description": "Full description",
-      "regular_price": "$X.XX",
-      "happy_hour_price": "$Y.YY"
-    }
-  ]
-}
-```
-
-## Deployment
-
-### Frontend Deployment
-
-Deploy to any static hosting service:
-- Vercel
-- Netlify
-- GitHub Pages
-- AWS S3 + CloudFront
-
-### Backend Deployment
-
-Deploy Node.js API to:
-- Heroku
-- Railway
-- Render
-- AWS Elastic Beanstalk
-
-### Environment Setup
-
-1. Update production API URLs in `js/config.js`
-2. Set up CORS on your backend API
-3. Configure Supabase connection strings
-4. Add API keys for Google Maps, AI services
-
-## API Documentation
-
-### Main Endpoints
-
-```
-GET  /api/businesses           - Get all businesses
-GET  /api/businesses/:id       - Get single business
-POST /api/businesses           - Create business (admin)
-PATCH /api/businesses/:id      - Update business (admin)
-
-GET  /api/admin/businesses     - Admin view with full data
-POST /api/bulk-events          - Bulk event upload
-```
-
-### Business Data Structure
-
-See admin dashboard for complete schema including:
-- Basic info (name, category, address, phone)
-- Menu items
-- Drinks
-- Happy hour items
-- Specials
-- Events
-- Feed posts
-
-## Features Roadmap
-
-- [x] Business directory
-- [x] Happy hours page
-- [x] Specials & events
-- [x] Admin dashboard
-- [x] Live feed integration
-- [x] AI assistant
-- [ ] SMS loyalty program
-- [ ] Mobile app
-- [ ] Advanced analytics
-- [ ] Multi-location support
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-Proprietary - All rights reserved
-
-## Support
-
-For support, email: support@gulfcoastradar.com
-
-## Acknowledgments
-
-- Built with love for the Gulf Coast community
-- Special thanks to all participating local businesses
-- Powered by CyberCheck social media integration
-# cybercheck-links-
+- `live-gcr-`: 33 of the 48 JS filenames shared with it are byte-identical, and it holds the real `trip-swipe/` app.
+- `gcr-api-clean`: does today what the menu-editor routes and business-data loaders here did early on.
+- `cybercheck-links-`: many URLs here point at `cybercheck-links.vercel.app` and `cybercheck-api-database.vercel.app`.

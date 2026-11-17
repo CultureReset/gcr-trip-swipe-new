@@ -10,7 +10,7 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 const url = 'https://mkepugvdlktfsossumox.supabase.co';
-const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZXB1Z3ZkbGt0ZnNvc3N1bW94Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTQyMjQwMSwiZXhwIjoyMDk0OTk4NDAxfQ.uWxvQQKDxbaAz0FgcfwOhH3mtq92uXPOc4luQnw48DI';
+const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || (() => { throw new Error('Set SUPABASE_SERVICE_ROLE_KEY (Supabase > Settings > API) before running this script'); })());
 
 const db = createClient(url, key);
 const dataDir = '/Users/owner/gcr-entities-clean';
